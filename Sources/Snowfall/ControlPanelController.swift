@@ -23,7 +23,6 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
     private let leavesCheckbox = NSButton(checkboxWithTitle: "Autumn Leaves", target: nil, action: nil)
     private let spaceCheckbox = NSButton(checkboxWithTitle: "Space Stars", target: nil, action: nil)
     private let loginCheckbox = NSButton(checkboxWithTitle: "Open at Login", target: nil, action: nil)
-    private let chatButton = NSButton(title: "Chat", target: nil, action: nil)
     private let hideButton = NSButton(title: "Hide Window", target: nil, action: nil)
     private let quitButton = NSButton(title: "Quit Snowfall", target: nil, action: nil)
 
@@ -149,12 +148,6 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
         loginCheckbox.target = self
         loginCheckbox.action = #selector(toggleLogin)
 
-        chatButton.isBordered = false
-        chatButton.font = .systemFont(ofSize: 11, weight: .medium)
-        chatButton.contentTintColor = NSColor(calibratedRed: 0.70, green: 0.86, blue: 1.0, alpha: 1.0)
-        chatButton.target = self
-        chatButton.action = #selector(openChat)
-
         hideButton.isBordered = false
         hideButton.font = .systemFont(ofSize: 11)
         hideButton.contentTintColor = NSColor.white.withAlphaComponent(0.6)
@@ -169,7 +162,7 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
         quitButton.target = self
         quitButton.action = #selector(quit)
 
-        let footer = NSStackView(views: [chatButton, hideButton, quitButton])
+        let footer = NSStackView(views: [hideButton, quitButton])
         footer.orientation = .horizontal
         footer.spacing = 18
 
@@ -282,11 +275,6 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
         """
         NSApp.activate(ignoringOtherApps: true)
         alert.runModal()
-    }
-
-    @objc private func openChat() {
-        hide()
-        NotificationCenter.default.post(name: .snowfallOpenChat, object: nil)
     }
 
     @objc private func hidePanel() {
