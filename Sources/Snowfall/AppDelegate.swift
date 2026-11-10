@@ -8,6 +8,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var statusItem: NSStatusItem!
     private var toggleItem: NSMenuItem!
     private var loginItem: NSMenuItem!
+    private var lightsItem: NSMenuItem!
     private var intensityItems: [NSMenuItem] = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -40,18 +41,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if defaults.object(forKey: Settings.intensityKey) == nil {
             Settings.setIntensity(.cozy)
         }
+        if defaults.object(forKey: Settings.lightsKey) == nil {
+            Settings.setLightsEnabled(true)
+        }
 
         if Settings.isSnowing {
             snow.start()
         }
         refreshMenuState()
 
-        // Show the control window when launched by hand. If Snowfall is set to
-        // open at login, keep login quiet and just start the snow.
-        if !LoginItem.isEnabled {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
-                self?.panel.show()
-            }
+        // Always show the control window on launch so it is obvious the app
+        // opened. Hiding it keeps everything running in the menu bar.
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
+            self?.panel.show()
         }
     }
 
@@ -84,6 +86,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         controlsItem.target = self
         menu.addItem(controlsItem)
 
+        let hideItem = NSMenuItem(title: "Hide Controls", action: #selector(hideControls), keyEquivalent: "")
+        hideItem.target = self
+        menu.addItem(hideItem)
+
         menu.addItem(.separator())
 
         toggleItem = NSMenuItem(title: "Let It Snow", action: #selector(toggleSnow), keyEquivalent: "")
@@ -101,6 +107,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         intensityRoot.submenu = intensityMenu
         menu.addItem(intensityRoot)
+
+        lightsItem = NSMenuItem(title: "Christmas Lights", action: #selector(toggleLights), keyEquivalent: "")
+        lightsItem.target = self
+        menu.addItem(lightsItem)
 
         menu.addItem(.separator())
 
@@ -121,8 +131,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func refreshMenuState() {
         let snowing = Settings.isSnowing
+        let lights = Settings.lightsEnabled
+
         toggleItem.state = snowing ? .on : .off
-        statusItem.button?.alphaValue = snowing ? 1.0 : 0.4
+        lightsItem.state = lights ? .on : .off
+        statusItem.button?.alphaValue = (snowing || lights) ? 1.0 : 0.4
 
         for item in intensityItems {
             item.state = item.tag == Settings.intensity.rawValue ? .on : .off
@@ -138,19 +151,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         panel.show()
     }
 
+    @objc private func hideControls() {
+        panel.hide()
+    }
+
     @objc private func stateChanged() {
         refreshMenuState()
     }
 
     @objc private func toggleSnow() {
         Settings.setSnowing(!Settings.isSnowing)
+        snow.sync()
+        refreshMenuState()
+        NotificationCenter.default.post(name: .snowfallStateChanged, object: nil)
+    }
 
-        if Settings.isSnowing {
-            snow.start()
-        } else {
-            snow.stop()
-        }
-
+    @objc private func toggleLights() {
+        Settings.setLightsEnabled(!Settings.lightsEnabled)
+        snow.sync()
         refreshMenuState()
         NotificationCenter.default.post(name: .snowfallStateChanged, object: nil)
     }

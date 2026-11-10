@@ -1,5 +1,12 @@
 import AppKit
 
+/// Hides the panel when the user presses Escape.
+private final class PanelWindow: NSWindow {
+    override func cancelOperation(_ sender: Any?) {
+        orderOut(nil)
+    }
+}
+
 /// A small, friendly control window. This is the visible "face" of the app,
 /// so opening Snowfall always does something obvious — even when it is already running.
 final class ControlPanelController: NSObject, NSWindowDelegate {
@@ -12,12 +19,14 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
         target: nil,
         action: nil
     )
+    private let lightsCheckbox = NSButton(checkboxWithTitle: "Christmas Lights", target: nil, action: nil)
     private let loginCheckbox = NSButton(checkboxWithTitle: "Open at Login", target: nil, action: nil)
+    private let hideButton = NSButton(title: "Hide Window", target: nil, action: nil)
     private let quitButton = NSButton(title: "Quit Snowfall", target: nil, action: nil)
 
     override init() {
-        window = NSWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 360, height: 440),
+        window = PanelWindow(
+            contentRect: NSRect(x: 0, y: 0, width: 360, height: 480),
             styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
             defer: false
@@ -44,14 +53,29 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
         window.makeKeyAndOrderFront(nil)
     }
 
+    func hide() {
+        window.orderOut(nil)
+    }
+
     func refresh() {
         let snowing = Settings.isSnowing
+        let lights = Settings.lightsEnabled
 
-        statusLabel.stringValue = snowing ? "Snow is falling on your desktop ❄️" : "Snow is paused"
+        switch (snowing, lights) {
+        case (true, true):
+            statusLabel.stringValue = "Snow + Christmas lights are on"
+        case (true, false):
+            statusLabel.stringValue = "Snow is falling on your desktop ❄️"
+        case (false, true):
+            statusLabel.stringValue = "Christmas lights are glowing 🎄"
+        case (false, false):
+            statusLabel.stringValue = "Everything is off"
+        }
+
         toggleButton.title = snowing ? "Turn Snow Off" : "Turn Snow On"
-
         intensityControl.selectedSegment = Settings.intensity.rawValue
 
+        lightsCheckbox.state = lights ? .on : .off
         loginCheckbox.isEnabled = LoginItem.isAvailable
         loginCheckbox.state = LoginItem.isEnabled ? .on : .off
     }
@@ -103,14 +127,29 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
         intensityControl.target = self
         intensityControl.action = #selector(changeIntensity)
 
+        lightsCheckbox.target = self
+        lightsCheckbox.action = #selector(toggleLights)
+
         loginCheckbox.target = self
         loginCheckbox.action = #selector(toggleLogin)
 
+        hideButton.isBordered = false
+        hideButton.font = .systemFont(ofSize: 11)
+        hideButton.contentTintColor = NSColor.white.withAlphaComponent(0.6)
+        hideButton.target = self
+        hideButton.action = #selector(hidePanel)
+        hideButton.keyEquivalent = "w"
+        hideButton.keyEquivalentModifierMask = [.command]
+
         quitButton.isBordered = false
         quitButton.font = .systemFont(ofSize: 11)
-        quitButton.contentTintColor = NSColor.white.withAlphaComponent(0.55)
+        quitButton.contentTintColor = NSColor.white.withAlphaComponent(0.6)
         quitButton.target = self
         quitButton.action = #selector(quit)
+
+        let footer = NSStackView(views: [hideButton, quitButton])
+        footer.orientation = .horizontal
+        footer.spacing = 18
 
         let stack = NSStackView(views: [
             iconView,
@@ -119,15 +158,18 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
             statusLabel,
             toggleButton,
             intensityControl,
+            lightsCheckbox,
             loginCheckbox,
-            quitButton
+            footer
         ])
         stack.orientation = .vertical
         stack.alignment = .centerX
-        stack.spacing = 12
+        stack.spacing = 11
         stack.setCustomSpacing(18, after: subtitleLabel)
         stack.setCustomSpacing(24, after: statusLabel)
-        stack.setCustomSpacing(20, after: intensityControl)
+        stack.setCustomSpacing(16, after: intensityControl)
+        stack.setCustomSpacing(6, after: lightsCheckbox)
+        stack.setCustomSpacing(18, after: loginCheckbox)
         stack.translatesAutoresizingMaskIntoConstraints = false
 
         background.addSubview(stack)
@@ -157,13 +199,7 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
 
     @objc private func toggleSnow() {
         Settings.setSnowing(!Settings.isSnowing)
-
-        if Settings.isSnowing {
-            SnowController.shared.start()
-        } else {
-            SnowController.shared.stop()
-        }
-
+        SnowController.shared.sync()
         refresh()
         NotificationCenter.default.post(name: .snowfallStateChanged, object: nil)
     }
@@ -172,6 +208,13 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
         guard let intensity = Intensity(rawValue: intensityControl.selectedSegment) else { return }
         Settings.setIntensity(intensity)
         SnowController.shared.applyIntensity()
+        NotificationCenter.default.post(name: .snowfallStateChanged, object: nil)
+    }
+
+    @objc private func toggleLights() {
+        Settings.setLightsEnabled(lightsCheckbox.state == .on)
+        SnowController.shared.sync()
+        refresh()
         NotificationCenter.default.post(name: .snowfallStateChanged, object: nil)
     }
 
@@ -199,6 +242,10 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
         """
         NSApp.activate(ignoringOtherApps: true)
         alert.runModal()
+    }
+
+    @objc private func hidePanel() {
+        hide()
     }
 
     @objc private func quit() {

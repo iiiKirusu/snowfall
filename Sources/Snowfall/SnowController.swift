@@ -1,24 +1,38 @@
 import AppKit
 
-/// Owns one snow window per display.
+/// Owns one overlay window per display and keeps snow / lights in sync with settings.
 final class SnowController {
     static let shared = SnowController()
 
     private var windows: [SnowWindow] = []
 
-    var isSnowing: Bool {
+    var hasWindows: Bool {
         !windows.isEmpty
     }
 
-    func start() {
-        guard windows.isEmpty else { return }
+    /// Applies the current settings: creates windows when needed,
+    /// fades things in and out, and tears everything down when both effects are off.
+    func sync(animated: Bool = true) {
+        let wantsSnow = Settings.isSnowing
+        let wantsLights = Settings.lightsEnabled
 
-        for screen in NSScreen.screens {
-            let window = SnowWindow(screen: screen, intensity: Settings.intensity)
-            windows.append(window)
-            window.orderFrontRegardless()
-            window.snowView.fadeIn()
+        guard wantsSnow || wantsLights else {
+            stop(animated: animated)
+            return
         }
+
+        if windows.isEmpty {
+            createWindows()
+        }
+
+        for window in windows {
+            window.setSnowVisible(wantsSnow, animated: animated)
+            window.setLightsVisible(wantsLights, animated: animated)
+        }
+    }
+
+    func start() {
+        sync()
     }
 
     func stop(animated: Bool = true) {
@@ -38,14 +52,22 @@ final class SnowController {
     }
 
     func rebuild() {
-        guard isSnowing else { return }
+        guard !windows.isEmpty else { return }
         stop(animated: false)
-        start()
+        sync(animated: false)
     }
 
     func applyIntensity() {
         for window in windows {
             window.applyIntensity(Settings.intensity)
+        }
+    }
+
+    private func createWindows() {
+        for screen in NSScreen.screens {
+            let window = SnowWindow(screen: screen, intensity: Settings.intensity)
+            windows.append(window)
+            window.orderFrontRegardless()
         }
     }
 }

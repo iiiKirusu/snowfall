@@ -26,6 +26,7 @@ enum Intensity: Int, CaseIterable {
 enum Settings {
     static let snowingKey = "snowing"
     static let intensityKey = "intensity"
+    static let lightsKey = "lights"
 
     static var isSnowing: Bool {
         UserDefaults.standard.bool(forKey: snowingKey)
@@ -44,5 +45,16 @@ enum Settings {
 
     static func setIntensity(_ intensity: Intensity) {
         UserDefaults.standard.set(intensity.rawValue, forKey: intensityKey)
+    }
+
+    static var lightsEnabled: Bool {
+        guard UserDefaults.standard.object(forKey: lightsKey) != nil else {
+            return true
+        }
+        return UserDefaults.standard.bool(forKey: lightsKey)
+    }
+
+    static func setLightsEnabled(_ value: Bool) {
+        UserDefaults.standard.set(value, forKey: lightsKey)
     }
 }

@@ -7,9 +7,10 @@ The snow lives in a click-through window **above your wallpaper and behind your 
 ## Features
 
 - Falling snow with two depth layers: soft distant flakes and closer, detailed snowflakes
-- A friendly control panel that appears whenever you open the app
+- A friendly control panel that appears whenever you open the app, with a **Hide Window** button (or press Esc)
 - Menu-bar snowflake toggles the snow on and off (with a gentle fade)
 - Intensity: **Light**, **Cozy**, or **Blizzard**
+- Optional **Christmas Lights**: a warm, twinkling fairy-light garland around the desktop, tucked below the menu bar and above the Dock
 - Optional **Open at Login**
 - No Dock icon, no window, no permissions, no network access
 - Self-contained Swift app — no third-party dependencies
@@ -44,13 +45,15 @@ This is normal for apps shared outside the App Store without a developer subscri
 
 ## Use
 
-Opening **Snowfall** shows a small control panel with a big on/off button and intensity picker. If you close it, the app keeps running in the menu bar.
+Opening **Snowfall** shows a small control panel with a big on/off button, intensity picker, and Christmas Lights toggle. Hide it with the **Hide Window** button, the close button, or **Esc** — the app keeps running in the menu bar.
 
 Look for the snowflake in the menu bar:
 
 - **Snowfall Controls…** — reopen the control panel
+- **Hide Controls** — tuck the panel away
 - **Let It Snow** — turn the snow on or off
 - **Intensity** — Light / Cozy / Blizzard
+- **Christmas Lights** — turn the glowing garland on or off
 - **Open at Login** — start Snowfall automatically when you log in (move it to `/Applications` first)
 - **Quit Snowfall** — stop the app completely
 
@@ -64,6 +67,7 @@ Turn off **Open at Login**, choose **Quit Snowfall**, then drag the app to the T
 
 - `Sources/Snowfall/SnowWindow.swift` — borderless, click-through window at the desktop window level (`CGWindowLevelForKey(.desktopWindow) + 1`)
 - `Sources/Snowfall/SnowView.swift` — two `CAEmitterLayer`s of snow particles, scaled per display
+- `Sources/Snowfall/LightsView.swift` — a sagging wire of warm, twinkling fairy lights around the desktop
 - `Sources/Snowfall/SnowTextures.swift` — snowflake and soft-dot sprites drawn at runtime with Core Graphics
 - `Sources/Snowfall/AppDelegate.swift` — menu-bar item, settings, login item
 - `Scripts/generate-icon.swift` — draws the app icon at every size, then `iconutil` converts it to `.icns`

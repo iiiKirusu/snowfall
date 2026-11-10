@@ -33,6 +33,8 @@ INSTALL
 USE
 • A Snowfall control panel opens when you launch the app.
 • Use the big button to turn the snow on and off.
+• Tick "Christmas Lights" for a warm, twinkling garland around the screen.
+• Click "Hide Window" (or press Esc) to tuck the panel away.
 • You can also use the snowflake in your menu bar at any time.
 • "Intensity" picks Light, Cozy, or Blizzard.
 • "Open at Login" starts the snow automatically when you log in.

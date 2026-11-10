@@ -7,6 +7,7 @@ final class SnowView: NSView {
     private let nearLayer = CAEmitterLayer()
     private let backingScale: CGFloat
     private var intensity: Intensity
+    private var isVisible = false
 
     private struct CellSpec {
         let image: CGImage
@@ -101,7 +102,21 @@ final class SnowView: NSView {
         rebuildCells()
     }
 
-    func fadeIn() {
+    func setSnowVisible(_ visible: Bool, animated: Bool) {
+        guard visible != isVisible else { return }
+        isVisible = visible
+
+        if animated {
+            visible ? fadeIn() : fadeOut()
+        } else {
+            for emitter in [farLayer, nearLayer] {
+                emitter.removeAllAnimations()
+                emitter.opacity = visible ? 1 : 0
+            }
+        }
+    }
+
+    private func fadeIn() {
         for emitter in [farLayer, nearLayer] {
             let animation = CABasicAnimation(keyPath: "opacity")
             animation.fromValue = 0
@@ -113,7 +128,7 @@ final class SnowView: NSView {
         }
     }
 
-    func fadeOut(completion: @escaping () -> Void) {
+    private func fadeOut() {
         for emitter in [farLayer, nearLayer] {
             let animation = CABasicAnimation(keyPath: "opacity")
             animation.fromValue = 1
@@ -123,8 +138,6 @@ final class SnowView: NSView {
             emitter.opacity = 0
             emitter.add(animation, forKey: "fadeOut")
         }
-
-        DispatchQueue.main.asyncAfter(deadline: .now() + 0.6, execute: completion)
     }
 
     private func setUpLayers() {
