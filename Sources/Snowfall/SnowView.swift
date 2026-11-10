@@ -99,7 +99,7 @@ final class SnowView: NSView {
     func applyIntensity(_ newIntensity: Intensity) {
         guard newIntensity != intensity else { return }
         intensity = newIntensity
-        rebuildCells()
+        rebuildCells(burst: true)
     }
 
     func setSnowVisible(_ visible: Bool, animated: Bool) {
@@ -170,27 +170,63 @@ final class SnowView: NSView {
         CATransaction.commit()
     }
 
-    private func rebuildCells() {
+    private func rebuildCells(burst: Bool = false) {
         let area = max(bounds.width * bounds.height, 1)
         let displayFactor = Double(area / (1920 * 1080))
         let total = intensity.targetCount * displayFactor
+        let speed = CGFloat(intensity.speedMultiplier)
+        let size = CGFloat(intensity.sizeMultiplier)
+        let drift = CGFloat(intensity.driftMultiplier)
 
         CATransaction.begin()
         CATransaction.setDisableActions(true)
-        farLayer.emitterCells = makeCells(count: total * 0.65, specs: farSpecs)
-        nearLayer.emitterCells = makeCells(count: total * 0.35, specs: nearSpecs)
+        farLayer.emitterCells = makeCells(count: total * 0.6, specs: farSpecs, speed: speed, size: size, drift: drift)
+        nearLayer.emitterCells = makeCells(count: total * 0.4, specs: nearSpecs, speed: speed, size: size, drift: drift)
         CATransaction.commit()
-    }
 
-    private func makeCells(count: Double, specs: [CellSpec]) -> [CAEmitterCell] {
-        specs.map { spec in
-            let meanLifetime = Double((spec.lifetime.lowerBound + spec.lifetime.upperBound) / 2)
-            let birthRate = Float(count * spec.share / max(meanLifetime, 1))
-            return makeCell(from: spec, birthRate: birthRate)
+        if burst {
+            applyBurst()
         }
     }
 
-    private func makeCell(from spec: CellSpec, birthRate: Float) -> CAEmitterCell {
+    /// Briefly over-produce snow so the new intensity is obvious right away
+    /// instead of taking a lifetime of flakes to fill in.
+    private func applyBurst() {
+        let factor: Float = 3.0
+
+        CATransaction.begin()
+        CATransaction.setDisableActions(true)
+        farLayer.emitterCells?.forEach { $0.birthRate *= factor }
+        nearLayer.emitterCells?.forEach { $0.birthRate *= factor }
+        CATransaction.commit()
+
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.8) { [weak self] in
+            guard let self, self.isVisible else { return }
+            self.rebuildCells()
+        }
+    }
+
+    private func makeCells(
+        count: Double,
+        specs: [CellSpec],
+        speed: CGFloat,
+        size: CGFloat,
+        drift: CGFloat
+    ) -> [CAEmitterCell] {
+        specs.map { spec in
+            let meanLifetime = Double((spec.lifetime.lowerBound + spec.lifetime.upperBound) / 2)
+            let birthRate = Float(count * spec.share / max(meanLifetime, 1))
+            return makeCell(from: spec, birthRate: birthRate, speed: speed, size: size, drift: drift)
+        }
+    }
+
+    private func makeCell(
+        from spec: CellSpec,
+        birthRate: Float,
+        speed: CGFloat,
+        size: CGFloat,
+        drift: CGFloat
+    ) -> CAEmitterCell {
         let cell = CAEmitterCell()
         let meanLifetime = (spec.lifetime.lowerBound + spec.lifetime.upperBound) / 2
         let meanScale = (spec.scale.lowerBound + spec.scale.upperBound) / 2
@@ -202,23 +238,23 @@ final class SnowView: NSView {
         cell.lifetime = Float(meanLifetime)
         cell.lifetimeRange = Float((spec.lifetime.upperBound - spec.lifetime.lowerBound) / 2)
 
-        cell.velocity = meanSpeed
-        cell.velocityRange = (spec.speed.upperBound - spec.speed.lowerBound) / 2
+        cell.velocity = meanSpeed * speed
+        cell.velocityRange = ((spec.speed.upperBound - spec.speed.lowerBound) / 2) * speed
         cell.emissionLongitude = -CGFloat.pi / 2
         cell.emissionRange = .pi / 5
 
-        cell.scale = meanScale
-        cell.scaleRange = (spec.scale.upperBound - spec.scale.lowerBound) / 2
-        cell.scaleSpeed = -0.002
+        cell.scale = meanScale * size
+        cell.scaleRange = ((spec.scale.upperBound - spec.scale.lowerBound) / 2) * size
+        cell.scaleSpeed = -0.002 * size
 
         cell.alphaRange = 0.15
         cell.alphaSpeed = Float(-spec.alpha / max(meanLifetime * 0.9, 0.1))
         cell.color = CGColor(gray: 1, alpha: spec.alpha)
 
-        cell.spin = spec.spin
+        cell.spin = spec.spin * speed
         cell.spinRange = spec.spin * 2
-        cell.yAcceleration = -1.5
-        cell.xAcceleration = CGFloat.random(in: -spec.drift...spec.drift)
+        cell.yAcceleration = -1.5 * speed
+        cell.xAcceleration = CGFloat.random(in: -spec.drift...spec.drift) * drift
 
         return cell
     }

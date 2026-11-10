@@ -16,9 +16,36 @@ enum Intensity: Int, CaseIterable {
     /// Approximate number of snowflakes on a 1920 x 1080 display.
     var targetCount: Double {
         switch self {
-        case .light: return 120
+        case .light: return 70
         case .cozy: return 240
-        case .blizzard: return 420
+        case .blizzard: return 760
+        }
+    }
+
+    /// How fast the flakes fall.
+    var speedMultiplier: Double {
+        switch self {
+        case .light: return 0.5
+        case .cozy: return 1.0
+        case .blizzard: return 2.1
+        }
+    }
+
+    /// How big the flakes look.
+    var sizeMultiplier: Double {
+        switch self {
+        case .light: return 0.72
+        case .cozy: return 1.0
+        case .blizzard: return 1.3
+        }
+    }
+
+    /// How much the flakes sway sideways.
+    var driftMultiplier: Double {
+        switch self {
+        case .light: return 0.6
+        case .cozy: return 1.0
+        case .blizzard: return 1.8
         }
     }
 }

@@ -148,7 +148,7 @@ private enum SpaceTextures {
             }
         }
 
-        let starCount = max(Int(Double(pixelWidth * pixelHeight) / 4200), 160)
+        let starCount = max(Int(Double(pixelWidth * pixelHeight) / 2200), 260)
         for _ in 0..<starCount {
             let x = CGFloat.random(in: 0...width)
             let y = CGFloat.random(in: 0...height)
@@ -345,7 +345,7 @@ final class SpaceView: NSView {
 
         guard bounds.width > 2, bounds.height > 2 else { return }
 
-        let count = max(Int(Double(bounds.width * bounds.height) / 34000), 30)
+        let count = max(Int(Double(bounds.width * bounds.height) / 16000), 60)
         for _ in 0..<count {
             let layer = CALayer()
             let size = CGFloat.random(in: 8...22)
@@ -378,9 +378,9 @@ final class SpaceView: NSView {
 
     private func startTimer() {
         guard timer == nil else { return }
-        nextShoot = Date().timeIntervalSinceReferenceDate + Double.random(in: 1.2...3.5)
+        nextShoot = Date().timeIntervalSinceReferenceDate + Double.random(in: 0.6...1.8)
 
-        let timer = Timer(timeInterval: 0.4, repeats: true) { [weak self] _ in
+        let timer = Timer(timeInterval: 0.3, repeats: true) { [weak self] _ in
             self?.tick()
         }
         RunLoop.main.add(timer, forMode: .common)
@@ -396,31 +396,51 @@ final class SpaceView: NSView {
         guard isVisible, layer?.opacity ?? 0 > 0.01 else { return }
         let now = Date().timeIntervalSinceReferenceDate
         guard now >= nextShoot else { return }
-        nextShoot = now + Double.random(in: 3.5...8.5)
+        nextShoot = now + Double.random(in: 0.9...3.0)
         shoot()
     }
 
     private func shoot() {
         guard bounds.width > 100, bounds.height > 100 else { return }
 
-        let startX = CGFloat.random(in: bounds.width * 0.12...bounds.width * 0.88)
-        let startY = CGFloat.random(in: bounds.height * 0.55...bounds.height * 0.95)
+        // One in three streaks is a bright, long comet with a glowing head.
+        let isComet = Int.random(in: 0..<100) < 38
+
+        let startX = CGFloat.random(in: bounds.width * 0.10...bounds.width * 0.90)
+        let startY = CGFloat.random(in: bounds.height * 0.55...bounds.height * 0.98)
         let direction: CGFloat = Bool.random() ? -1 : 1
-        let distance = min(bounds.width, bounds.height) * CGFloat.random(in: 0.35...0.62)
-        let angle = CGFloat.random(in: 0.35...0.75) * direction
+        let distance = min(bounds.width, bounds.height) * CGFloat.random(
+            in: (isComet ? 0.55...0.95 : 0.3...0.55)
+        )
+        let angle = CGFloat.random(in: 0.3...0.8) * direction
         let endX = startX + sin(angle) * distance * 1.4
         let endY = startY - cos(angle) * distance
 
+        let length: CGFloat = isComet ? CGFloat.random(in: 240...340) : CGFloat.random(in: 130...200)
+        let thickness: CGFloat = isComet ? 18 : 12
+
         let streak = CALayer()
-        streak.bounds = CGRect(x: 0, y: 0, width: 160, height: 12)
+        streak.bounds = CGRect(x: 0, y: 0, width: length, height: thickness)
         streak.contents = SpaceTextures.shootingStar
+        streak.contentsGravity = .resize
         streak.contentsScale = backingScale
         streak.position = CGPoint(x: startX, y: startY)
         streak.opacity = 0
         streak.setAffineTransform(CGAffineTransform(rotationAngle: atan2(endY - startY, endX - startX)))
         shootingLayer.addSublayer(streak)
 
-        let duration = Double.random(in: 0.8...1.4)
+        if isComet {
+            let head = CALayer()
+            head.bounds = CGRect(x: 0, y: 0, width: 52, height: 52)
+            head.contents = SpaceTextures.sparkle
+            head.contentsGravity = .resize
+            head.contentsScale = backingScale
+            head.position = CGPoint(x: length - 6, y: thickness / 2)
+            head.opacity = 0.95
+            streak.addSublayer(head)
+        }
+
+        let duration = Double.random(in: (isComet ? 1.4...2.2 : 0.7...1.2))
 
         let move = CABasicAnimation(keyPath: "position")
         move.fromValue = NSValue(point: CGPoint(x: startX, y: startY))
@@ -428,7 +448,7 @@ final class SpaceView: NSView {
 
         let fade = CAKeyframeAnimation(keyPath: "opacity")
         fade.values = [0, 1, 1, 0]
-        fade.keyTimes = [0, 0.12, 0.7, 1]
+        fade.keyTimes = isComet ? [0, 0.08, 0.82, 1] : [0, 0.12, 0.7, 1]
 
         let group = CAAnimationGroup()
         group.animations = [move, fade]
