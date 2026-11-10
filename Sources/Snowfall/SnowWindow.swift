@@ -1,10 +1,12 @@
 import AppKit
 
 /// A click-through window that sits just above the wallpaper and behind desktop icons.
-/// It hosts both the snow and the Christmas lights.
+/// It hosts the space sky, Christmas lights, autumn leaves, and snow.
 final class SnowWindow: NSWindow {
     let snowView: SnowView
     let lightsView: LightsView
+    let leavesView: LeavesView
+    let spaceView: SpaceView
 
     init(screen: NSScreen, intensity: Intensity) {
         let screenFrame = screen.frame
@@ -23,6 +25,14 @@ final class SnowWindow: NSWindow {
             frame: NSRect(origin: .zero, size: screenFrame.size),
             backingScale: screen.backingScaleFactor,
             insets: NSEdgeInsets(top: topInset, left: 0, bottom: bottomInset, right: 0)
+        )
+        leavesView = LeavesView(
+            frame: NSRect(origin: .zero, size: screenFrame.size),
+            backingScale: screen.backingScaleFactor
+        )
+        spaceView = SpaceView(
+            frame: NSRect(origin: .zero, size: screenFrame.size),
+            backingScale: screen.backingScaleFactor
         )
 
         super.init(
@@ -48,12 +58,18 @@ final class SnowWindow: NSWindow {
         container.layer?.backgroundColor = NSColor.clear.cgColor
         container.layer?.masksToBounds = false
 
-        // Lights sit behind the falling snow.
+        // Back to front: space sky, lights, leaves, snow.
+        spaceView.frame = container.bounds
         lightsView.frame = container.bounds
+        leavesView.frame = container.bounds
         snowView.frame = container.bounds
+        spaceView.autoresizingMask = [.width, .height]
         lightsView.autoresizingMask = [.width, .height]
+        leavesView.autoresizingMask = [.width, .height]
         snowView.autoresizingMask = [.width, .height]
+        container.addSubview(spaceView)
         container.addSubview(lightsView)
+        container.addSubview(leavesView)
         container.addSubview(snowView)
 
         contentView = container
@@ -75,9 +91,19 @@ final class SnowWindow: NSWindow {
         lightsView.setLightsVisible(visible, animated: animated)
     }
 
+    func setLeavesVisible(_ visible: Bool, animated: Bool) {
+        leavesView.setLeavesVisible(visible, animated: animated)
+    }
+
+    func setSpaceVisible(_ visible: Bool, animated: Bool) {
+        spaceView.setSpaceVisible(visible, animated: animated)
+    }
+
     func fadeOutAndClose() {
         snowView.setSnowVisible(false, animated: true)
         lightsView.setLightsVisible(false, animated: true)
+        leavesView.setLeavesVisible(false, animated: true)
+        spaceView.setSpaceVisible(false, animated: true)
 
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.75) { [self] in
             orderOut(nil)

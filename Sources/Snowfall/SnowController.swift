@@ -11,12 +11,14 @@ final class SnowController {
     }
 
     /// Applies the current settings: creates windows when needed,
-    /// fades things in and out, and tears everything down when both effects are off.
+    /// fades things in and out, and tears everything down when all effects are off.
     func sync(animated: Bool = true) {
         let wantsSnow = Settings.isSnowing
         let wantsLights = Settings.lightsEnabled
+        let wantsLeaves = Settings.leavesEnabled
+        let wantsSpace = Settings.spaceEnabled
 
-        guard wantsSnow || wantsLights else {
+        guard wantsSnow || wantsLights || wantsLeaves || wantsSpace else {
             stop(animated: animated)
             return
         }
@@ -28,6 +30,8 @@ final class SnowController {
         for window in windows {
             window.setSnowVisible(wantsSnow, animated: animated)
             window.setLightsVisible(wantsLights, animated: animated)
+            window.setLeavesVisible(wantsLeaves, animated: animated)
+            window.setSpaceVisible(wantsSpace, animated: animated)
         }
     }
 

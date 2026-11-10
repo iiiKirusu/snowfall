@@ -11,6 +11,8 @@ The snow lives in a click-through window **above your wallpaper and behind your 
 - Menu-bar snowflake toggles the snow on and off (with a gentle fade)
 - Intensity: **Light**, **Cozy**, or **Blizzard**
 - Optional **Christmas Lights**: a warm, twinkling fairy-light garland around the desktop, tucked below the menu bar and above the Dock
+- Optional **Autumn Leaves**: maple, oak and amber leaves drifting down over your wallpaper
+- Optional **Space Stars**: a deep-space theme — a dark night sky with a starfield, twinkling stars and shooting stars
 - A private **two-person chat** with end-to-end encryption — pair two Macs with an invite code
 - Optional **Open at Login**
 - No Dock icon, no permissions required
@@ -34,7 +36,7 @@ The built app appears at `dist/Snowfall.app`.
 ./Scripts/make-dmg.sh
 ```
 
-Send `dist/Snowfall-1.0.0.dmg` to your girlfriend (AirDrop, iCloud, whatever). She opens it, drags **Snowfall** to **Applications**, and opens it.
+Send `dist/Snowfall-1.1.0.dmg` to your girlfriend (AirDrop, iCloud, whatever). She opens it, drags **Snowfall** to **Applications**, and opens it.
 
 Because the app is signed ad hoc rather than with a paid Apple Developer certificate, Gatekeeper may block the first launch. If macOS will not open it:
 
@@ -56,6 +58,8 @@ Look for the snowflake in the menu bar:
 - **Let It Snow** — turn the snow on or off
 - **Intensity** — Light / Cozy / Blizzard
 - **Christmas Lights** — turn the glowing garland on or off
+- **Autumn Leaves** — turn drifting fall leaves on or off
+- **Space Stars** — turn the starry space sky on or off
 - **Open at Login** — start Snowfall automatically when you log in (move it to `/Applications` first)
 - **Quit Snowfall** — stop the app completely
 
@@ -89,6 +93,8 @@ Turn off **Open at Login**, choose **Quit Snowfall**, then drag the app to the T
 - `Sources/Snowfall/SnowWindow.swift` — borderless, click-through window at the desktop window level (`CGWindowLevelForKey(.desktopWindow) + 1`)
 - `Sources/Snowfall/SnowView.swift` — two `CAEmitterLayer`s of snow particles, scaled per display
 - `Sources/Snowfall/LightsView.swift` — a sagging wire of warm, twinkling fairy lights around the desktop
+- `Sources/Snowfall/LeavesView.swift` — autumn leaf sprites and the emitter that blows them across the screen
+- `Sources/Snowfall/SpaceView.swift` — the space theme: nebula, starfield, twinkling stars and shooting stars
 - `Sources/Snowfall/SnowTextures.swift` — snowflake and soft-dot sprites drawn at runtime with Core Graphics
 - `Sources/Snowfall/ChatService.swift` — encrypted chat transport and invite-code pairing over ntfy.sh
 - `Sources/Snowfall/ChatView.swift` — the AppKit chat interface (onboarding, invite card, message bubbles)

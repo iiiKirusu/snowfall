@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT="$(pwd)"
 
-VERSION="1.0.0"
+VERSION="1.1.0"
 APP="$ROOT/dist/Snowfall.app"
 DMG="$ROOT/dist/Snowfall-$VERSION.dmg"
 
@@ -34,6 +34,8 @@ USE
 • A Snowfall control panel opens when you launch the app.
 • Use the big button to turn the snow on and off.
 • Tick "Christmas Lights" for a warm, twinkling garland around the screen.
+• Tick "Autumn Leaves" for drifting fall leaves.
+• Tick "Space Stars" for a starry night sky with shooting stars.
 • Click "Hide Window" (or press Esc) to tuck the panel away.
 • You can also use the snowflake in your menu bar at any time.
 • "Intensity" picks Light, Cozy, or Blizzard.

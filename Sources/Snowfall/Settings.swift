@@ -27,6 +27,8 @@ enum Settings {
     static let snowingKey = "snowing"
     static let intensityKey = "intensity"
     static let lightsKey = "lights"
+    static let leavesKey = "leaves"
+    static let spaceKey = "space"
 
     static var isSnowing: Bool {
         UserDefaults.standard.bool(forKey: snowingKey)
@@ -56,5 +58,27 @@ enum Settings {
 
     static func setLightsEnabled(_ value: Bool) {
         UserDefaults.standard.set(value, forKey: lightsKey)
+    }
+
+    static var leavesEnabled: Bool {
+        guard UserDefaults.standard.object(forKey: leavesKey) != nil else {
+            return false
+        }
+        return UserDefaults.standard.bool(forKey: leavesKey)
+    }
+
+    static func setLeavesEnabled(_ value: Bool) {
+        UserDefaults.standard.set(value, forKey: leavesKey)
+    }
+
+    static var spaceEnabled: Bool {
+        guard UserDefaults.standard.object(forKey: spaceKey) != nil else {
+            return false
+        }
+        return UserDefaults.standard.bool(forKey: spaceKey)
+    }
+
+    static func setSpaceEnabled(_ value: Bool) {
+        UserDefaults.standard.set(value, forKey: spaceKey)
     }
 }

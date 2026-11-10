@@ -12,6 +12,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private var chatItem: NSMenuItem!
     private var loginItem: NSMenuItem!
     private var lightsItem: NSMenuItem!
+    private var leavesItem: NSMenuItem!
+    private var spaceItem: NSMenuItem!
     private var intensityItems: [NSMenuItem] = []
 
     func applicationDidFinishLaunching(_ notification: Notification) {
@@ -65,10 +67,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if defaults.object(forKey: Settings.lightsKey) == nil {
             Settings.setLightsEnabled(true)
         }
-
-        if Settings.isSnowing {
-            snow.start()
+        if defaults.object(forKey: Settings.leavesKey) == nil {
+            Settings.setLeavesEnabled(false)
         }
+        if defaults.object(forKey: Settings.spaceKey) == nil {
+            Settings.setSpaceEnabled(false)
+        }
+
+        snow.start()
         chat.start()
         chatWindow.onBack = { [weak self] in
             self?.panel.show()
@@ -142,6 +148,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         lightsItem.target = self
         menu.addItem(lightsItem)
 
+        leavesItem = NSMenuItem(title: "Autumn Leaves", action: #selector(toggleLeaves), keyEquivalent: "")
+        leavesItem.target = self
+        menu.addItem(leavesItem)
+
+        spaceItem = NSMenuItem(title: "Space Stars", action: #selector(toggleSpace), keyEquivalent: "")
+        spaceItem.target = self
+        menu.addItem(spaceItem)
+
         menu.addItem(.separator())
 
         loginItem = NSMenuItem(title: "Open at Login", action: #selector(toggleLoginItem), keyEquivalent: "")
@@ -162,10 +176,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func refreshMenuState() {
         let snowing = Settings.isSnowing
         let lights = Settings.lightsEnabled
+        let leaves = Settings.leavesEnabled
+        let space = Settings.spaceEnabled
 
         toggleItem.state = snowing ? .on : .off
         lightsItem.state = lights ? .on : .off
-        statusItem.button?.alphaValue = (snowing || lights) ? 1.0 : 0.4
+        leavesItem.state = leaves ? .on : .off
+        spaceItem.state = space ? .on : .off
+        statusItem.button?.alphaValue = (snowing || lights || leaves || space) ? 1.0 : 0.4
 
         for item in intensityItems {
             item.state = item.tag == Settings.intensity.rawValue ? .on : .off
@@ -220,6 +238,20 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         NotificationCenter.default.post(name: .snowfallStateChanged, object: nil)
     }
 
+    @objc private func toggleLeaves() {
+        Settings.setLeavesEnabled(!Settings.leavesEnabled)
+        snow.sync()
+        refreshMenuState()
+        NotificationCenter.default.post(name: .snowfallStateChanged, object: nil)
+    }
+
+    @objc private func toggleSpace() {
+        Settings.setSpaceEnabled(!Settings.spaceEnabled)
+        snow.sync()
+        refreshMenuState()
+        NotificationCenter.default.post(name: .snowfallStateChanged, object: nil)
+    }
+
     @objc private func selectIntensity(_ sender: NSMenuItem) {
         guard let intensity = Intensity(rawValue: sender.tag) else { return }
         Settings.setIntensity(intensity)
@@ -249,7 +281,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func screenParametersChanged() {
-        if Settings.isSnowing || Settings.lightsEnabled {
+        if Settings.isSnowing || Settings.lightsEnabled || Settings.leavesEnabled || Settings.spaceEnabled {
             snow.rebuild()
         }
     }

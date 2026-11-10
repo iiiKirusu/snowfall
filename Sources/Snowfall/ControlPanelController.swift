@@ -20,6 +20,8 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
         action: nil
     )
     private let lightsCheckbox = NSButton(checkboxWithTitle: "Christmas Lights", target: nil, action: nil)
+    private let leavesCheckbox = NSButton(checkboxWithTitle: "Autumn Leaves", target: nil, action: nil)
+    private let spaceCheckbox = NSButton(checkboxWithTitle: "Space Stars", target: nil, action: nil)
     private let loginCheckbox = NSButton(checkboxWithTitle: "Open at Login", target: nil, action: nil)
     private let chatButton = NSButton(title: "Chat", target: nil, action: nil)
     private let hideButton = NSButton(title: "Hide Window", target: nil, action: nil)
@@ -27,7 +29,7 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
 
     override init() {
         window = PanelWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 360, height: 480),
+            contentRect: NSRect(x: 0, y: 0, width: 360, height: 560),
             styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
             defer: false
@@ -61,22 +63,29 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
     func refresh() {
         let snowing = Settings.isSnowing
         let lights = Settings.lightsEnabled
+        let leaves = Settings.leavesEnabled
+        let space = Settings.spaceEnabled
 
-        switch (snowing, lights) {
-        case (true, true):
-            statusLabel.stringValue = "Snow + Christmas lights are on"
-        case (true, false):
-            statusLabel.stringValue = "Snow is falling on your desktop ❄️"
-        case (false, true):
-            statusLabel.stringValue = "Christmas lights are glowing 🎄"
-        case (false, false):
+        var active: [String] = []
+        if snowing { active.append("Snow") }
+        if lights { active.append("Christmas lights") }
+        if leaves { active.append("Autumn leaves") }
+        if space { active.append("Space stars") }
+
+        if active.isEmpty {
             statusLabel.stringValue = "Everything is off"
+        } else if active.count == 1 {
+            statusLabel.stringValue = "\(active[0]) is on"
+        } else {
+            statusLabel.stringValue = active.joined(separator: " + ") + " are on"
         }
 
         toggleButton.title = snowing ? "Turn Snow Off" : "Turn Snow On"
         intensityControl.selectedSegment = Settings.intensity.rawValue
 
         lightsCheckbox.state = lights ? .on : .off
+        leavesCheckbox.state = leaves ? .on : .off
+        spaceCheckbox.state = space ? .on : .off
         loginCheckbox.isEnabled = LoginItem.isAvailable
         loginCheckbox.state = LoginItem.isEnabled ? .on : .off
     }
@@ -111,7 +120,7 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
         titleLabel.font = .systemFont(ofSize: 24, weight: .semibold)
         titleLabel.textColor = .white
 
-        let subtitleLabel = NSTextField(labelWithString: "Snow on your desktop, all winter long.")
+        let subtitleLabel = NSTextField(labelWithString: "A little atmosphere for your desktop.")
         subtitleLabel.font = .systemFont(ofSize: 12)
         subtitleLabel.textColor = NSColor.white.withAlphaComponent(0.55)
 
@@ -130,6 +139,12 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
 
         lightsCheckbox.target = self
         lightsCheckbox.action = #selector(toggleLights)
+
+        leavesCheckbox.target = self
+        leavesCheckbox.action = #selector(toggleLeaves)
+
+        spaceCheckbox.target = self
+        spaceCheckbox.action = #selector(toggleSpace)
 
         loginCheckbox.target = self
         loginCheckbox.action = #selector(toggleLogin)
@@ -166,6 +181,8 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
             toggleButton,
             intensityControl,
             lightsCheckbox,
+            leavesCheckbox,
+            spaceCheckbox,
             loginCheckbox,
             footer
         ])
@@ -176,6 +193,8 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
         stack.setCustomSpacing(24, after: statusLabel)
         stack.setCustomSpacing(16, after: intensityControl)
         stack.setCustomSpacing(6, after: lightsCheckbox)
+        stack.setCustomSpacing(6, after: leavesCheckbox)
+        stack.setCustomSpacing(14, after: spaceCheckbox)
         stack.setCustomSpacing(18, after: loginCheckbox)
         stack.translatesAutoresizingMaskIntoConstraints = false
 
@@ -220,6 +239,20 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
 
     @objc private func toggleLights() {
         Settings.setLightsEnabled(lightsCheckbox.state == .on)
+        SnowController.shared.sync()
+        refresh()
+        NotificationCenter.default.post(name: .snowfallStateChanged, object: nil)
+    }
+
+    @objc private func toggleLeaves() {
+        Settings.setLeavesEnabled(leavesCheckbox.state == .on)
+        SnowController.shared.sync()
+        refresh()
+        NotificationCenter.default.post(name: .snowfallStateChanged, object: nil)
+    }
+
+    @objc private func toggleSpace() {
+        Settings.setSpaceEnabled(spaceCheckbox.state == .on)
         SnowController.shared.sync()
         refresh()
         NotificationCenter.default.post(name: .snowfallStateChanged, object: nil)
