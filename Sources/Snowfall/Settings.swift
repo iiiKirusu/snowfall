@@ -173,7 +173,7 @@ enum Settings {
 
     static var instagramHandle: String {
         let value = UserDefaults.standard.string(forKey: instagramKey) ?? ""
-        return value.isEmpty ? "iiiKirusu" : value
+        return value.isEmpty ? "kirusuz" : value
     }
 
     static func setInstagramHandle(_ value: String) {

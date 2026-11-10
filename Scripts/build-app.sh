@@ -5,7 +5,7 @@ cd "$(dirname "$0")/.."
 ROOT="$(pwd)"
 
 APP_NAME="Snowfall"
-VERSION="1.4.0"
+VERSION="1.4.1"
 BUILD_NUMBER="$(date +%Y%m%d%H%M)"
 DIST="$ROOT/dist"
 BUNDLE="$DIST/$APP_NAME.app"

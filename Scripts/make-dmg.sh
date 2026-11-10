@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT="$(pwd)"
 
-VERSION="1.4.0"
+VERSION="1.4.1"
 APP="$ROOT/dist/Snowfall.app"
 DMG="$ROOT/dist/Snowfall-$VERSION.dmg"
 
