@@ -4,6 +4,8 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let snow = SnowController.shared
     private let menu = NSMenu()
     private lazy var panel = ControlPanelController()
+    private lazy var atmosphere = AtmosphereController()
+    private lazy var credits = CreditsController()
 
     private var statusItem: NSStatusItem!
     private var toggleItem: NSMenuItem!
@@ -35,6 +37,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             name: .snowfallShowControls,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(openAtmosphere),
+            name: .snowfallOpenAtmosphere,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(openCredits),
+            name: .snowfallOpenCredits,
+            object: nil
+        )
 
         let defaults = UserDefaults.standard
         if defaults.object(forKey: Settings.snowingKey) == nil {
@@ -60,6 +74,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         // opened. Hiding it keeps everything running in the menu bar.
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
             self?.panel.show()
+        }
+
+        let arguments = ProcessInfo.processInfo.arguments
+        if arguments.contains("--atmosphere") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                self?.atmosphere.show()
+            }
+        }
+        if arguments.contains("--credits") {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
+                self?.credits.show()
+            }
         }
     }
 
@@ -128,6 +154,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
         menu.addItem(.separator())
 
+        let atmosphereItem = NSMenuItem(title: "Customize Effects…", action: #selector(openAtmosphere), keyEquivalent: "")
+        atmosphereItem.target = self
+        menu.addItem(atmosphereItem)
+
+        menu.addItem(.separator())
+
         loginItem = NSMenuItem(title: "Open at Login", action: #selector(toggleLoginItem), keyEquivalent: "")
         loginItem.target = self
         menu.addItem(loginItem)
@@ -135,6 +167,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let aboutItem = NSMenuItem(title: "About Snowfall", action: #selector(showAbout), keyEquivalent: "")
         aboutItem.target = self
         menu.addItem(aboutItem)
+
+        let creditsItem = NSMenuItem(title: "Credits…", action: #selector(openCredits), keyEquivalent: "")
+        creditsItem.target = self
+        menu.addItem(creditsItem)
 
         menu.addItem(.separator())
 
@@ -171,6 +207,14 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     @objc private func hideControls() {
         panel.hide()
+    }
+
+    @objc private func openAtmosphere() {
+        atmosphere.show()
+    }
+
+    @objc private func openCredits() {
+        credits.show()
     }
 
     @objc private func stateChanged() {

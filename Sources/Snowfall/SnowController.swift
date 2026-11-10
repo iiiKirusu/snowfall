@@ -67,6 +67,20 @@ final class SnowController {
         }
     }
 
+    /// Pushes the user's colour, brightness and leaf preferences to every display.
+    func applyAtmosphere() {
+        for window in windows {
+            window.applyLightsCustomization(
+                color: Settings.lightsColor,
+                brightness: Settings.lightsBrightness
+            )
+            window.applyLeavesCustomization(
+                density: Settings.leavesDensity,
+                speed: Settings.leavesSpeed
+            )
+        }
+    }
+
     private func createWindows() {
         for screen in NSScreen.screens {
             let window = SnowWindow(screen: screen, intensity: Settings.intensity)

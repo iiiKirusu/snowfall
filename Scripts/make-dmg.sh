@@ -4,7 +4,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 ROOT="$(pwd)"
 
-VERSION="1.3.0"
+VERSION="1.4.0"
 APP="$ROOT/dist/Snowfall.app"
 DMG="$ROOT/dist/Snowfall-$VERSION.dmg"
 
@@ -36,6 +36,8 @@ USE
 • Tick "Christmas Lights" for a warm, twinkling garland around the screen.
 • Tick "Autumn Leaves" for drifting fall leaves.
 • Tick "Space Stars" for a starry night sky with shooting stars.
+• Click "Customize…" to change the light colour, light brightness, and how
+  many leaves fall and how fast.
 • Click "Hide Window" (or press Esc) to tuck the panel away.
 • You can also use the snowflake in your menu bar at any time.
 • "Intensity" picks Light, Cozy, or Blizzard.

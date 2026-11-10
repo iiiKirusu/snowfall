@@ -1,4 +1,4 @@
-import Foundation
+import AppKit
 
 enum Intensity: Int, CaseIterable {
     case light = 0
@@ -56,6 +56,13 @@ enum Settings {
     static let lightsKey = "lights"
     static let leavesKey = "leaves"
     static let spaceKey = "space"
+    static let leavesDensityKey = "leaves.density"
+    static let leavesSpeedKey = "leaves.speed"
+    static let lightsColorKey = "lights.color"
+    static let lightsBrightnessKey = "lights.brightness"
+    static let authorKey = "credits.author"
+    static let instagramKey = "credits.instagram"
+    static let githubKey = "credits.github"
 
     static var isSnowing: Bool {
         UserDefaults.standard.bool(forKey: snowingKey)
@@ -107,5 +114,100 @@ enum Settings {
 
     static func setSpaceEnabled(_ value: Bool) {
         UserDefaults.standard.set(value, forKey: spaceKey)
+    }
+
+    /// How many leaves fall, from 0 (a few) to 1 (a blizzard of leaves).
+    static var leavesDensity: Double {
+        let value = UserDefaults.standard.double(forKey: leavesDensityKey)
+        guard UserDefaults.standard.object(forKey: leavesDensityKey) != nil else { return 0.5 }
+        return min(max(value, 0), 1)
+    }
+
+    static func setLeavesDensity(_ value: Double) {
+        UserDefaults.standard.set(min(max(value, 0), 1), forKey: leavesDensityKey)
+    }
+
+    /// How fast the leaves fall, from 0 (drifting) to 1 (blown by wind).
+    static var leavesSpeed: Double {
+        let value = UserDefaults.standard.double(forKey: leavesSpeedKey)
+        guard UserDefaults.standard.object(forKey: leavesSpeedKey) != nil else { return 0.5 }
+        return min(max(value, 0), 1)
+    }
+
+    static func setLeavesSpeed(_ value: Double) {
+        UserDefaults.standard.set(min(max(value, 0), 1), forKey: leavesSpeedKey)
+    }
+
+    /// The main colour of the fairy lights.
+    static var lightsColor: NSColor {
+        if let hex = UserDefaults.standard.string(forKey: lightsColorKey),
+           let color = NSColor(hexString: hex) {
+            return color
+        }
+        return NSColor(calibratedRed: 1.0, green: 0.86, blue: 0.62, alpha: 1)
+    }
+
+    static func setLightsColor(_ color: NSColor) {
+        UserDefaults.standard.set(color.hexString ?? "", forKey: lightsColorKey)
+    }
+
+    /// How bright the fairy lights glow, from 0.15 to 1.
+    static var lightsBrightness: Double {
+        let value = UserDefaults.standard.double(forKey: lightsBrightnessKey)
+        guard UserDefaults.standard.object(forKey: lightsBrightnessKey) != nil else { return 0.9 }
+        return min(max(value, 0.15), 1)
+    }
+
+    static func setLightsBrightness(_ value: Double) {
+        UserDefaults.standard.set(min(max(value, 0.15), 1), forKey: lightsBrightnessKey)
+    }
+
+    static var authorName: String {
+        let value = UserDefaults.standard.string(forKey: authorKey) ?? ""
+        return value.isEmpty ? "kous" : value
+    }
+
+    static func setAuthorName(_ value: String) {
+        UserDefaults.standard.set(value, forKey: authorKey)
+    }
+
+    static var instagramHandle: String {
+        UserDefaults.standard.string(forKey: instagramKey) ?? ""
+    }
+
+    static func setInstagramHandle(_ value: String) {
+        UserDefaults.standard.set(value, forKey: instagramKey)
+    }
+
+    static var githubHandle: String {
+        UserDefaults.standard.string(forKey: githubKey) ?? ""
+    }
+
+    static func setGithubHandle(_ value: String) {
+        UserDefaults.standard.set(value, forKey: githubKey)
+    }
+}
+
+extension NSColor {
+    var hexString: String? {
+        guard let rgb = usingColorSpace(.sRGB) else { return nil }
+        let red = Int(round(rgb.redComponent * 255))
+        let green = Int(round(rgb.greenComponent * 255))
+        let blue = Int(round(rgb.blueComponent * 255))
+        return String(format: "%02X%02X%02X", red, green, blue)
+    }
+
+    convenience init?(hexString: String) {
+        var value = hexString.trimmingCharacters(in: .whitespacesAndNewlines)
+        if value.hasPrefix("#") {
+            value.removeFirst()
+        }
+        guard value.count == 6, let number = UInt32(value, radix: 16) else { return nil }
+        self.init(
+            srgbRed: CGFloat((number >> 16) & 0xFF) / 255,
+            green: CGFloat((number >> 8) & 0xFF) / 255,
+            blue: CGFloat(number & 0xFF) / 255,
+            alpha: 1
+        )
     }
 }

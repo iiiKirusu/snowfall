@@ -168,7 +168,8 @@ final class LeavesView: NSView {
     private let emitter = CAEmitterLayer()
     private let backingScale: CGFloat
     private var isVisible = false
-    private var lastBuiltSize: NSSize = .zero
+    private var density: Double
+    private var speed: Double
 
     private static let palette: [CGColor] = {
         let colorSpace = CGColorSpace(name: CGColorSpace.sRGB)!
@@ -183,8 +184,10 @@ final class LeavesView: NSView {
         return colors.map { CGColor(colorSpace: colorSpace, components: [$0.0, $0.1, $0.2, 1])! }
     }()
 
-    init(frame frameRect: NSRect, backingScale: CGFloat) {
+    init(frame frameRect: NSRect, backingScale: CGFloat, density: Double = 0.5, speed: Double = 0.5) {
         self.backingScale = max(backingScale, 1)
+        self.density = min(max(density, 0), 1)
+        self.speed = min(max(speed, 0), 1)
         super.init(frame: frameRect)
 
         wantsLayer = true
@@ -239,6 +242,20 @@ final class LeavesView: NSView {
         }
     }
 
+    /// Adjust how many leaves fall and how fast they blow past.
+    func applyCustomization(density: Double, speed: Double) {
+        let newDensity = min(max(density, 0), 1)
+        let newSpeed = min(max(speed, 0), 1)
+        guard abs(newDensity - self.density) > 0.001 || abs(newSpeed - self.speed) > 0.001 else { return }
+
+        self.density = newDensity
+        self.speed = newSpeed
+
+        if isVisible {
+            rebuildCells()
+        }
+    }
+
     private func updateGeometry() {
         CATransaction.begin()
         CATransaction.setDisableActions(true)
@@ -251,7 +268,9 @@ final class LeavesView: NSView {
     private func rebuildCells() {
         let area = max(bounds.width * bounds.height, 1)
         let displayFactor = Double(area / (1920 * 1080))
-        let totalLeaves = 64 * displayFactor
+        let densityFactor = 0.2 + 1.8 * density
+        let speedFactor = 0.45 + 1.55 * speed
+        let totalLeaves = 64 * displayFactor * densityFactor
         let meanLifetime: Double = 26
         let totalBirthRate = totalLeaves / meanLifetime
 
@@ -269,8 +288,8 @@ final class LeavesView: NSView {
                 cell.lifetime = Float(meanLifetime)
                 cell.lifetimeRange = 10
 
-                cell.velocity = CGFloat.random(in: 16...30)
-                cell.velocityRange = 12
+                cell.velocity = CGFloat.random(in: 16...30) * CGFloat(speedFactor)
+                cell.velocityRange = 12 * CGFloat(speedFactor)
                 cell.emissionLongitude = -CGFloat.pi / 2
                 cell.emissionRange = .pi / 4
 
@@ -283,10 +302,10 @@ final class LeavesView: NSView {
                 cell.alphaRange = 0.25
                 cell.alphaSpeed = -1 / Float(meanLifetime)
 
-                cell.spin = CGFloat.random(in: 0.6...1.8) * (Bool.random() ? 1 : -1)
+                cell.spin = CGFloat.random(in: 0.6...1.8) * (Bool.random() ? 1 : -1) * CGFloat(speedFactor)
                 cell.spinRange = 1.2
-                cell.yAcceleration = -3
-                cell.xAcceleration = CGFloat.random(in: -5...5)
+                cell.yAcceleration = -3 * CGFloat(speedFactor)
+                cell.xAcceleration = CGFloat.random(in: -5...5) * CGFloat(speedFactor)
 
                 // Leaves span the full height so the screen never looks empty
                 // right after the effect is turned on.
@@ -299,6 +318,5 @@ final class LeavesView: NSView {
         CATransaction.setDisableActions(true)
         emitter.emitterCells = cells
         CATransaction.commit()
-        lastBuiltSize = bounds.size
     }
 }

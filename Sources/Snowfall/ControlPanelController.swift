@@ -24,11 +24,13 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
     private let spaceCheckbox = NSButton(checkboxWithTitle: "Space Stars", target: nil, action: nil)
     private let loginCheckbox = NSButton(checkboxWithTitle: "Open at Login", target: nil, action: nil)
     private let hideButton = NSButton(title: "Hide Window", target: nil, action: nil)
+    private let customizeButton = NSButton(title: "Customize…", target: nil, action: nil)
+    private let creditsButton = NSButton(title: "Credits", target: nil, action: nil)
     private let quitButton = NSButton(title: "Quit Snowfall", target: nil, action: nil)
 
     override init() {
         window = PanelWindow(
-            contentRect: NSRect(x: 0, y: 0, width: 360, height: 560),
+            contentRect: NSRect(x: 0, y: 0, width: 360, height: 600),
             styleMask: [.titled, .closable, .fullSizeContentView],
             backing: .buffered,
             defer: false
@@ -148,6 +150,18 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
         loginCheckbox.target = self
         loginCheckbox.action = #selector(toggleLogin)
 
+        customizeButton.bezelStyle = .rounded
+        customizeButton.font = .systemFont(ofSize: 12, weight: .medium)
+        customizeButton.controlSize = .small
+        customizeButton.target = self
+        customizeButton.action = #selector(openAtmosphere)
+
+        creditsButton.bezelStyle = .rounded
+        creditsButton.font = .systemFont(ofSize: 12, weight: .medium)
+        creditsButton.controlSize = .small
+        creditsButton.target = self
+        creditsButton.action = #selector(openCredits)
+
         hideButton.isBordered = false
         hideButton.font = .systemFont(ofSize: 11)
         hideButton.contentTintColor = NSColor.white.withAlphaComponent(0.6)
@@ -166,6 +180,10 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
         footer.orientation = .horizontal
         footer.spacing = 18
 
+        let extras = NSStackView(views: [customizeButton, creditsButton])
+        extras.orientation = .horizontal
+        extras.spacing = 10
+
         let stack = NSStackView(views: [
             iconView,
             titleLabel,
@@ -176,6 +194,7 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
             lightsCheckbox,
             leavesCheckbox,
             spaceCheckbox,
+            extras,
             loginCheckbox,
             footer
         ])
@@ -188,6 +207,7 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
         stack.setCustomSpacing(6, after: lightsCheckbox)
         stack.setCustomSpacing(6, after: leavesCheckbox)
         stack.setCustomSpacing(14, after: spaceCheckbox)
+        stack.setCustomSpacing(14, after: extras)
         stack.setCustomSpacing(18, after: loginCheckbox)
         stack.translatesAutoresizingMaskIntoConstraints = false
 
@@ -275,6 +295,14 @@ final class ControlPanelController: NSObject, NSWindowDelegate {
         """
         NSApp.activate(ignoringOtherApps: true)
         alert.runModal()
+    }
+
+    @objc private func openAtmosphere() {
+        NotificationCenter.default.post(name: .snowfallOpenAtmosphere, object: nil)
+    }
+
+    @objc private func openCredits() {
+        NotificationCenter.default.post(name: .snowfallOpenCredits, object: nil)
     }
 
     @objc private func hidePanel() {

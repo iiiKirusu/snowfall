@@ -1,0 +1,43 @@
+name: Build
+
+on:
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build Snowfall
+    runs-on: macos-14
+
+    steps:
+      - name: Check out the code
+        uses: actions/checkout@v4
+
+      - name: Show the toolchain
+        run: swift --version
+
+      - name: Build the app
+        run: ./Scripts/build-app.sh
+
+      - name: Build the disk image
+        run: ./Scripts/make-dmg.sh
+
+      - name: Upload the app and disk image
+        uses: actions/upload-artifact@v4
+        with:
+          name: Snowfall
+          path: |
+            dist/Snowfall.app
+            dist/*.dmg
+
+      - name: Publish the release
+        if: startsWith(github.ref, 'refs/tags/v')
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" dist/*.dmg \
+            --title "Snowfall ${GITHUB_REF_NAME#v}" \
+            --notes "Snowfall for macOS. See the README for what changed."

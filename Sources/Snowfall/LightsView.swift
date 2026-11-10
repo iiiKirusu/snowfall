@@ -13,8 +13,6 @@ final class LightsView: NSView {
         NSColor(calibratedRed: 0.56, green: 0.80, blue: 1.00, alpha: 1)  // ice blue
     ]
 
-    private static let bulbImages: [CGImage] = palette.map(makeBulbImage)
-
     private let wireLayer = CAShapeLayer()
     private var bulbLayers: [CALayer] = []
     private let backingScale: CGFloat
@@ -22,9 +20,22 @@ final class LightsView: NSView {
     private var lastBuiltSize: NSSize = .zero
     private var isOn: Bool?
 
-    init(frame frameRect: NSRect, backingScale: CGFloat, insets: NSEdgeInsets = NSEdgeInsets()) {
+    private var baseColor: NSColor
+    private var brightness: CGFloat
+    private var bulbImages: [CGImage] = []
+    private var bulbColorIndices: [Int] = []
+
+    init(
+        frame frameRect: NSRect,
+        backingScale: CGFloat,
+        insets: NSEdgeInsets = NSEdgeInsets(),
+        color: NSColor = NSColor(calibratedRed: 1.0, green: 0.86, blue: 0.62, alpha: 1),
+        brightness: CGFloat = 0.9
+    ) {
         self.backingScale = max(backingScale, 1)
         self.insets = insets
+        self.baseColor = color
+        self.brightness = min(max(brightness, 0.15), 1)
         super.init(frame: frameRect)
 
         wantsLayer = true
@@ -34,11 +45,12 @@ final class LightsView: NSView {
         wireLayer.fillColor = nil
         wireLayer.lineWidth = 1.3
         wireLayer.strokeColor = NSColor(calibratedRed: 0.44, green: 0.33, blue: 0.22, alpha: 0.65).cgColor
-        wireLayer.shadowColor = NSColor(calibratedRed: 1.0, green: 0.78, blue: 0.45, alpha: 0.55).cgColor
         wireLayer.shadowRadius = 3.5
         wireLayer.shadowOpacity = 1
         wireLayer.shadowOffset = .zero
         layer?.addSublayer(wireLayer)
+
+        refreshBulbImages()
     }
 
     @available(*, unavailable)
@@ -101,6 +113,76 @@ final class LightsView: NSView {
         }
     }
 
+    /// Change the colour and brightness of the whole garland.
+    func applyCustomization(color: NSColor, brightness: CGFloat) {
+        let newBrightness = min(max(brightness, 0.15), 1)
+        guard color != baseColor || abs(newBrightness - self.brightness) > 0.001 else { return }
+
+        baseColor = color
+        self.brightness = newBrightness
+        refreshBulbImages()
+
+        // Keep the bulbs where they are so the garland doesn't jump around.
+        for (index, bulb) in bulbLayers.enumerated() {
+            let colorIndex = bulbColorIndices[index]
+            bulb.contents = bulbImages[colorIndex]
+        }
+
+        wireLayer.shadowColor = Self.glowColor(for: baseColor)
+            .withAlphaComponent(0.55 * brightness)
+            .cgColor
+    }
+
+    private func refreshBulbImages() {
+        let palette = Self.palette(for: baseColor)
+        bulbImages = palette.map { Self.makeBulbImage(color: $0, brightness: brightness) }
+        wireLayer.shadowColor = Self.glowColor(for: baseColor)
+            .withAlphaComponent(0.55 * brightness)
+            .cgColor
+    }
+
+    /// Builds a small family of shades around the chosen colour so the garland
+    /// still looks like a string of mixed bulbs.
+    private static func palette(for base: NSColor) -> [NSColor] {
+        let rgb = base.usingColorSpace(.sRGB) ?? base
+        var hue: CGFloat = 0
+        var saturation: CGFloat = 0
+        var value: CGFloat = 0
+        rgb.getHue(&hue, saturation: &saturation, brightness: &value, alpha: nil)
+
+        func shade(hue: CGFloat, saturation: CGFloat, brightness: CGFloat) -> NSColor {
+            NSColor(
+                hue: hue.truncatingRemainder(dividingBy: 1),
+                saturation: min(max(saturation, 0), 1),
+                brightness: min(max(brightness, 0), 1),
+                alpha: 1
+            )
+        }
+
+        return [
+            shade(hue: hue, saturation: saturation * 0.75, brightness: min(value * 1.05, 1)),
+            shade(hue: hue, saturation: saturation * 0.35, brightness: min(value * 1.1 + 0.12, 1)),
+            shade(hue: hue + 0.02, saturation: saturation, brightness: max(value * 0.8, 0.18)),
+            shade(hue: hue + 0.07, saturation: min(saturation * 1.1, 1), brightness: max(value * 0.9, 0.18)),
+            shade(hue: hue - 0.06, saturation: saturation * 0.9, brightness: max(value * 0.85, 0.18)),
+            shade(hue: hue, saturation: saturation * 0.2, brightness: min(value + 0.25, 1))
+        ]
+    }
+
+    private static func glowColor(for base: NSColor) -> NSColor {
+        let rgb = base.usingColorSpace(.sRGB) ?? base
+        var hue: CGFloat = 0
+        var saturation: CGFloat = 0
+        var value: CGFloat = 0
+        rgb.getHue(&hue, saturation: &saturation, brightness: &value, alpha: nil)
+        return NSColor(
+            hue: hue.truncatingRemainder(dividingBy: 1),
+            saturation: min(saturation * 0.6, 1),
+            brightness: min(max(value, 0.3), 1),
+            alpha: 1
+        )
+    }
+
     // MARK: - Building the lights
 
     private enum Segment {
@@ -151,6 +233,7 @@ final class LightsView: NSView {
             bulb.removeFromSuperlayer()
         }
         bulbLayers.removeAll()
+        bulbColorIndices.removeAll()
         wireLayer.path = nil
         lastBuiltSize = .zero
     }
@@ -273,7 +356,7 @@ final class LightsView: NSView {
                 x: sample.point.x + sample.inward.x * outwardOffset,
                 y: sample.point.y + sample.inward.y * outwardOffset
             )
-            bulb.contents = Self.bulbImages[colorIndex]
+            bulb.contents = bulbImages[colorIndex]
             bulb.contentsScale = backingScale
             bulb.opacity = 0.95
 
@@ -290,6 +373,7 @@ final class LightsView: NSView {
 
             layer?.addSublayer(bulb)
             bulbLayers.append(bulb)
+            bulbColorIndices.append(colorIndex)
 
             nextDistance += baseSpacing * CGFloat.random(in: 0.85...1.15)
         }
@@ -307,7 +391,7 @@ final class LightsView: NSView {
         }
     }
 
-    private static func makeBulbImage(color: NSColor) -> CGImage {
+    private static func makeBulbImage(color: NSColor, brightness: CGFloat) -> CGImage {
         let pixelSize = 96
         let colorSpace = CGColorSpace(name: CGColorSpace.sRGB)!
         let context = CGContext(
@@ -326,11 +410,12 @@ final class LightsView: NSView {
         let red = converted.redComponent
         let green = converted.greenComponent
         let blue = converted.blueComponent
+        let glow = min(max(brightness, 0.15), 1)
 
         let colors = [
-            CGColor(colorSpace: colorSpace, components: [1, 1, 1, 1])!,
-            CGColor(colorSpace: colorSpace, components: [red, green, blue, 1])!,
-            CGColor(colorSpace: colorSpace, components: [red, green, blue, 0.55])!,
+            CGColor(colorSpace: colorSpace, components: [1, 1, 1, glow])!,
+            CGColor(colorSpace: colorSpace, components: [red, green, blue, glow])!,
+            CGColor(colorSpace: colorSpace, components: [red, green, blue, 0.55 * glow])!,
             CGColor(colorSpace: colorSpace, components: [red, green, blue, 0])!
         ] as CFArray
         let locations: [CGFloat] = [0, 0.10, 0.34, 1]

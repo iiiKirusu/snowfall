@@ -1,89 +1,102 @@
 # Snowfall ❄️
 
-A tiny native macOS menu-bar app that makes it snow on your desktop wallpaper — and lets you turn it off whenever you want.
+Snow on your Mac desktop. A few other things you can switch on too.
 
-The snow lives in a click-through window **above your wallpaper and behind your desktop icons**, so it feels like part of the wallpaper instead of an app floating on top. It works on every connected display.
+![Snowfall preview](docs/preview.png)
 
-## Features
+Snowfall is a small menu bar app for macOS. Everything it draws goes straight onto
+your wallpaper — behind your desktop icons, under the menu bar — so it feels like part
+of the desktop and not a window sitting on top of it.
 
-- Falling snow with two depth layers: soft distant flakes and closer, detailed snowflakes
-- A friendly control panel that appears whenever you open the app, with a **Hide Window** button (or press Esc)
-- Menu-bar snowflake toggles the snow on and off (with a gentle fade)
-- Intensity: **Light**, **Cozy**, or **Blizzard**
-- Optional **Christmas Lights**: a warm, twinkling fairy-light garland around the desktop, tucked below the menu bar and above the Dock
-- Optional **Autumn Leaves**: maple, oak and amber leaves drifting down over your wallpaper
-- Optional **Space Stars**: a deep-space theme — a dark night sky with a starfield, twinkling stars and shooting stars
-- Optional **Open at Login**
-- No Dock icon, no permissions required
-- Self-contained Swift app — no third-party dependencies
+It works on every screen you have plugged in.
 
-## Build it
+## What it does
 
-Requires macOS 13 or newer and the Xcode Command Line Tools.
+- **Snow** — falling snow in three depths of storm: *Light*, *Cozy*, *Blizzard*
+- **Christmas lights** — a warm string of fairy lights around the edge of the screen
+- **Autumn leaves** — maple, oak and amber leaves blowing across the screen
+- **Space** — a night sky with stars, nebula clouds and shooting stars
+
+Each effect has its own switch. The ones that need more than on/off (light colour and
+brightness, how many leaves, how fast they fall) have sliders in the **Customize**
+window, and you can see the changes right away on your desktop.
+
+The app sits in the menu bar, asks for no permissions, and never uses the network.
+
+## Install
+
+Grab the latest `.dmg` from the [Releases](https://github.com/kous/snowfall/releases)
+page, open it and drag **Snowfall** into your **Applications** folder. Then open it
+from Applications.
+
+macOS will most likely tell you it can't verify the app, because it isn't signed with
+an Apple Developer certificate. It only happens once:
+
+1. Right-click Snowfall in Applications and choose **Open**, then **Open** again, or
+2. Go to **System Settings → Privacy & Security**, scroll down and click
+   **Open Anyway** next to Snowfall, or
+3. Run this in the Terminal:
+
+   ```bash
+   xattr -dr com.apple.quarantine /Applications/Snowfall.app
+   ```
+
+## Using it
+
+Open **Snowfall** and a small control panel shows up.
+
+- The big button turns the snow on and off
+- **Light / Cozy / Blizzard** sets how hard it snows
+- Tick **Christmas Lights**, **Autumn Leaves** or **Space Stars** to add them
+- **Customize…** opens the sliders for lights and leaves
+- **Hide Window** (or Esc, or the red close button) tucks the panel away
+
+After that the app lives in the menu bar. Click the snowflake icon for the same menu:
+turn things on and off, open the panel again, start Snowfall when you log in, or quit.
+
+## Build it yourself
+
+You need macOS 13 or newer and the Xcode Command Line Tools. There are no
+dependencies to install — it's plain Swift and AppKit.
 
 ```bash
+git clone https://github.com/kous/snowfall.git
+cd snowfall
 ./Scripts/build-app.sh
-open dist/Snowfall.app
 ```
 
-The built app appears at `dist/Snowfall.app`.
-
-## Make a DMG to share
+The app ends up in `dist/Snowfall.app`. To make a disk image as well:
 
 ```bash
-./Scripts/build-app.sh
 ./Scripts/make-dmg.sh
 ```
 
-Send `dist/Snowfall-1.1.0.dmg` to your girlfriend (AirDrop, iCloud, whatever). She opens it, drags **Snowfall** to **Applications**, and opens it.
-
-Because the app is signed ad hoc rather than with a paid Apple Developer certificate, Gatekeeper may block the first launch. If macOS will not open it:
-
-1. Try **right-click → Open** first (works on many macOS versions).
-2. If that is not offered, open **System Settings → Privacy & Security**, scroll down, and click **Open Anyway** next to Snowfall.
-3. Last resort, in Terminal: `xattr -dr com.apple.quarantine /Applications/Snowfall.app`
-
-This is normal for apps shared outside the App Store without a developer subscription, and it only happens once.
-
-## Use
-
-Opening **Snowfall** shows a small control panel with a big on/off button, intensity picker, and Christmas Lights toggle. Hide it with the **Hide Window** button, the close button, or **Esc** — the app keeps running in the menu bar.
-
-Look for the snowflake in the menu bar:
-
-- **Snowfall Controls…** — reopen the control panel
-- **Hide Controls** — tuck the panel away
-- **Let It Snow** — turn the snow on or off
-- **Intensity** — Light / Cozy / Blizzard
-- **Christmas Lights** — turn the glowing garland on or off
-- **Autumn Leaves** — turn drifting fall leaves on or off
-- **Space Stars** — turn the starry space sky on or off
-- **Open at Login** — start Snowfall automatically when you log in (move it to `/Applications` first)
-- **Quit Snowfall** — stop the app completely
-
-Settings are remembered between launches.
-
-## Uninstall
-
-Turn off **Open at Login**, choose **Quit Snowfall**, then drag the app to the Trash.
+`dist/Snowfall-<version>.dmg` is ready to share.
 
 ## How it works
 
-- `Sources/Snowfall/SnowWindow.swift` — borderless, click-through window at the desktop window level (`CGWindowLevelForKey(.desktopWindow) + 1`)
-- `Sources/Snowfall/SnowView.swift` — two `CAEmitterLayer`s of snow particles, scaled per display
-- `Sources/Snowfall/LightsView.swift` — a sagging wire of warm, twinkling fairy lights around the desktop
-- `Sources/Snowfall/LeavesView.swift` — autumn leaf sprites and the emitter that blows them across the screen
-- `Sources/Snowfall/SpaceView.swift` — the space theme: nebula, starfield, twinkling stars and shooting stars
-- `Sources/Snowfall/SnowTextures.swift` — snowflake and soft-dot sprites drawn at runtime with Core Graphics
-- `Sources/Snowfall/AppDelegate.swift` — menu-bar item, settings, login item
-- `Scripts/generate-icon.swift` — draws the app icon at every size, then `iconutil` converts it to `.icns`
+The effects live in a borderless, click-through window that sits just above the
+wallpaper window and below the Finder's desktop icons:
 
-## Tweaking
+| File | What it does |
+| --- | --- |
+| `Sources/Snowfall/SnowWindow.swift` | The overlay window and its window level |
+| `Sources/Snowfall/SnowView.swift` | Two layers of snow particles |
+| `Sources/Snowfall/LightsView.swift` | The sagging wire of fairy lights |
+| `Sources/Snowfall/LeavesView.swift` | Leaf sprites and the emitter that blows them |
+| `Sources/Snowfall/SpaceView.swift` | Starfield, nebula, twinkling stars, shooting stars |
+| `Sources/Snowfall/SnowTextures.swift` | Snowflake sprites drawn at runtime |
+| `Sources/Snowfall/AtmosphereController.swift` | The sliders for lights and leaves |
+| `Sources/Snowfall/CreditsController.swift` | The credits window |
+| `Sources/Snowfall/AppDelegate.swift` | Menu bar item, settings, login item |
 
-Some fun knobs:
+Sprites are drawn with Core Graphics at runtime, so there are no image files to ship.
 
-- Snow density per intensity: `Intensity.targetCount` in `Sources/Snowfall/Settings.swift`
-- Flake size, speed, drift, and fade: `farSpecs` / `nearSpecs` in `Sources/Snowfall/SnowView.swift`
-- Icon art: `Scripts/generate-icon.swift`
+## Credits
 
-Made with love. Merry Christmas! 🎄
+Made by [kous](https://github.com/kous) — say hi on
+[Instagram](https://instagram.com/kous).
+
+## License
+
+MIT. See [LICENSE](LICENSE).

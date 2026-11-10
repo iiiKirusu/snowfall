@@ -24,11 +24,15 @@ final class SnowWindow: NSWindow {
         lightsView = LightsView(
             frame: NSRect(origin: .zero, size: screenFrame.size),
             backingScale: screen.backingScaleFactor,
-            insets: NSEdgeInsets(top: topInset, left: 0, bottom: bottomInset, right: 0)
+            insets: NSEdgeInsets(top: topInset, left: 0, bottom: bottomInset, right: 0),
+            color: Settings.lightsColor,
+            brightness: CGFloat(Settings.lightsBrightness)
         )
         leavesView = LeavesView(
             frame: NSRect(origin: .zero, size: screenFrame.size),
-            backingScale: screen.backingScaleFactor
+            backingScale: screen.backingScaleFactor,
+            density: Settings.leavesDensity,
+            speed: Settings.leavesSpeed
         )
         spaceView = SpaceView(
             frame: NSRect(origin: .zero, size: screenFrame.size),
@@ -97,6 +101,14 @@ final class SnowWindow: NSWindow {
 
     func setSpaceVisible(_ visible: Bool, animated: Bool) {
         spaceView.setSpaceVisible(visible, animated: animated)
+    }
+
+    func applyLightsCustomization(color: NSColor, brightness: Double) {
+        lightsView.applyCustomization(color: color, brightness: CGFloat(brightness))
+    }
+
+    func applyLeavesCustomization(density: Double, speed: Double) {
+        leavesView.applyCustomization(density: density, speed: speed)
     }
 
     func fadeOutAndClose() {
