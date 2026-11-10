@@ -25,7 +25,7 @@ The app sits in the menu bar, asks for no permissions, and never uses the networ
 
 ## Install
 
-Grab the latest `.dmg` from the [Releases](https://github.com/kous/snowfall/releases)
+Grab the latest `.dmg` from the [Releases](https://github.com/iiiKirusu/snowfall/releases)
 page, open it and drag **Snowfall** into your **Applications** folder. Then open it
 from Applications.
 
@@ -60,7 +60,7 @@ You need macOS 13 or newer and the Xcode Command Line Tools. There are no
 dependencies to install — it's plain Swift and AppKit.
 
 ```bash
-git clone https://github.com/kous/snowfall.git
+git clone https://github.com/iiiKirusu/snowfall.git
 cd snowfall
 ./Scripts/build-app.sh
 ```
@@ -94,8 +94,8 @@ Sprites are drawn with Core Graphics at runtime, so there are no image files to 
 
 ## Credits
 
-Made by [kous](https://github.com/kous) — say hi on
-[Instagram](https://instagram.com/kous).
+Made by [iiiKirusu](https://github.com/iiiKirusu) — say hi on
+[Instagram](https://instagram.com/iiiKirusu).
 
 ## License
 

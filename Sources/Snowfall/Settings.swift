@@ -172,7 +172,8 @@ enum Settings {
     }
 
     static var instagramHandle: String {
-        UserDefaults.standard.string(forKey: instagramKey) ?? ""
+        let value = UserDefaults.standard.string(forKey: instagramKey) ?? ""
+        return value.isEmpty ? "iiiKirusu" : value
     }
 
     static func setInstagramHandle(_ value: String) {
@@ -180,7 +181,8 @@ enum Settings {
     }
 
     static var githubHandle: String {
-        UserDefaults.standard.string(forKey: githubKey) ?? ""
+        let value = UserDefaults.standard.string(forKey: githubKey) ?? ""
+        return value.isEmpty ? "iiiKirusu" : value
     }
 
     static func setGithubHandle(_ value: String) {
