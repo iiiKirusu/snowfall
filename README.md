@@ -7,6 +7,7 @@ The snow lives in a click-through window **above your wallpaper and behind your 
 ## Features
 
 - Falling snow with two depth layers: soft distant flakes and closer, detailed snowflakes
+- A friendly control panel that appears whenever you open the app
 - Menu-bar snowflake toggles the snow on and off (with a gentle fade)
 - Intensity: **Light**, **Cozy**, or **Blizzard**
 - Optional **Open at Login**
@@ -31,12 +32,23 @@ The built app appears at `dist/Snowfall.app`.
 ./Scripts/make-dmg.sh
 ```
 
-Send `dist/Snowfall-1.0.0.dmg` to your girlfriend (AirDrop, iCloud, whatever). She opens it, drags **Snowfall** to **Applications**, and opens it. Because the app is signed ad hoc rather than with a paid Apple Developer certificate, macOS may ask her to **right-click → Open** the first time. That is normal and only happens once.
+Send `dist/Snowfall-1.0.0.dmg` to your girlfriend (AirDrop, iCloud, whatever). She opens it, drags **Snowfall** to **Applications**, and opens it.
+
+Because the app is signed ad hoc rather than with a paid Apple Developer certificate, Gatekeeper may block the first launch. If macOS will not open it:
+
+1. Try **right-click → Open** first (works on many macOS versions).
+2. If that is not offered, open **System Settings → Privacy & Security**, scroll down, and click **Open Anyway** next to Snowfall.
+3. Last resort, in Terminal: `xattr -dr com.apple.quarantine /Applications/Snowfall.app`
+
+This is normal for apps shared outside the App Store without a developer subscription, and it only happens once.
 
 ## Use
 
+Opening **Snowfall** shows a small control panel with a big on/off button and intensity picker. If you close it, the app keeps running in the menu bar.
+
 Look for the snowflake in the menu bar:
 
+- **Snowfall Controls…** — reopen the control panel
 - **Let It Snow** — turn the snow on or off
 - **Intensity** — Light / Cozy / Blizzard
 - **Open at Login** — start Snowfall automatically when you log in (move it to `/Applications` first)

@@ -1,9 +1,9 @@
 import AppKit
-import ServiceManagement
 
 final class AppDelegate: NSObject, NSApplicationDelegate {
     private let snow = SnowController.shared
     private let menu = NSMenu()
+    private lazy var panel = ControlPanelController()
 
     private var statusItem: NSStatusItem!
     private var toggleItem: NSMenuItem!
@@ -20,6 +20,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             name: NSApplication.didChangeScreenParametersNotification,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(stateChanged),
+            name: .snowfallStateChanged,
+            object: nil
+        )
+        DistributedNotificationCenter.default().addObserver(
+            self,
+            selector: #selector(showControls),
+            name: .snowfallShowControls,
+            object: nil
+        )
 
         let defaults = UserDefaults.standard
         if defaults.object(forKey: Settings.snowingKey) == nil {
@@ -34,12 +46,18 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         refreshMenuState()
 
-        if !defaults.bool(forKey: "didWelcome") {
-            defaults.set(true, forKey: "didWelcome")
-            DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) { [weak self] in
-                self?.showWelcome()
+        // Show the control window when launched by hand. If Snowfall is set to
+        // open at login, keep login quiet and just start the snow.
+        if !LoginItem.isEnabled {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in
+                self?.panel.show()
             }
         }
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        panel.show()
+        return true
     }
 
     // MARK: - Menu bar
@@ -48,7 +66,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
 
         if let button = statusItem.button {
-            let image = NSImage(systemSymbolName: "snowflake", accessibilityDescription: "Snowfall")
+            let configuration = NSImage.SymbolConfiguration(pointSize: 15, weight: .medium)
+            let image = NSImage(systemSymbolName: "snowflake", accessibilityDescription: "Snowfall")?
+                .withSymbolConfiguration(configuration)
             image?.isTemplate = true
             button.image = image
             button.toolTip = "Snowfall"
@@ -60,9 +80,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private func buildMenu() {
         menu.autoenablesItems = false
 
-        let titleItem = NSMenuItem(title: "Snowfall", action: nil, keyEquivalent: "")
-        titleItem.isEnabled = false
-        menu.addItem(titleItem)
+        let controlsItem = NSMenuItem(title: "Snowfall Controls…", action: #selector(showControls), keyEquivalent: ",")
+        controlsItem.target = self
+        menu.addItem(controlsItem)
+
         menu.addItem(.separator())
 
         toggleItem = NSMenuItem(title: "Let It Snow", action: #selector(toggleSnow), keyEquivalent: "")
@@ -107,15 +128,19 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             item.state = item.tag == Settings.intensity.rawValue ? .on : .off
         }
 
-        loginItem.isEnabled = Bundle.main.bundleURL.pathExtension == "app"
-        loginItem.state = loginItemEnabled ? .on : .off
-    }
-
-    private var loginItemEnabled: Bool {
-        SMAppService.mainApp.status == .enabled
+        loginItem.isEnabled = LoginItem.isAvailable
+        loginItem.state = LoginItem.isEnabled ? .on : .off
     }
 
     // MARK: - Actions
+
+    @objc private func showControls() {
+        panel.show()
+    }
+
+    @objc private func stateChanged() {
+        refreshMenuState()
+    }
 
     @objc private func toggleSnow() {
         Settings.setSnowing(!Settings.isSnowing)
@@ -125,7 +150,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             snow.stop()
         }
+
         refreshMenuState()
+        NotificationCenter.default.post(name: .snowfallStateChanged, object: nil)
     }
 
     @objc private func selectIntensity(_ sender: NSMenuItem) {
@@ -133,15 +160,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         Settings.setIntensity(intensity)
         snow.applyIntensity()
         refreshMenuState()
+        NotificationCenter.default.post(name: .snowfallStateChanged, object: nil)
     }
 
     @objc private func toggleLoginItem() {
         do {
-            if loginItemEnabled {
-                try SMAppService.mainApp.unregister()
-            } else {
-                try SMAppService.mainApp.register()
-            }
+            try LoginItem.setEnabled(!LoginItem.isEnabled)
         } catch {
             let alert = NSAlert()
             alert.alertStyle = .warning
@@ -154,7 +178,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             NSApp.activate(ignoringOtherApps: true)
             alert.runModal()
         }
+
         refreshMenuState()
+        NotificationCenter.default.post(name: .snowfallStateChanged, object: nil)
     }
 
     @objc private func screenParametersChanged() {
@@ -171,26 +197,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         alert.informativeText = """
         A little Christmas snow for your desktop.
 
-        Click the snowflake in the menu bar to turn the snow on or off, choose an intensity, or have Snowfall open at login.
+        Click the snowflake in the menu bar, or open Snowfall again, to show the controls.
 
         Made with love. Merry Christmas!
         """
         alert.addButton(withTitle: "Close")
-        alert.icon = NSApp.applicationIconImage
-        alert.runModal()
-    }
-
-    private func showWelcome() {
-        NSApp.activate(ignoringOtherApps: true)
-
-        let alert = NSAlert()
-        alert.messageText = "Merry Christmas ❄️"
-        alert.informativeText = """
-        Snowfall is now making it snow on your desktop.
-
-        Look for the snowflake in your menu bar to turn the snow on or off, pick an intensity, or have Snowfall open at login.
-        """
-        alert.addButton(withTitle: "Let it snow")
         alert.icon = NSApp.applicationIconImage
         alert.runModal()
     }

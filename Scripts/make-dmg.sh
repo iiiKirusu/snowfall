@@ -25,12 +25,15 @@ Snowfall ❄️ — a little Christmas snow for your Mac desktop.
 INSTALL
 1. Drag Snowfall to the Applications folder.
 2. Open Snowfall from Applications.
-3. If macOS says it can't verify the app, right-click Snowfall and choose Open,
-   then click "Open" again. You only have to do this once.
+3. If macOS says it can't verify the app, do one of these (only needed once):
+   • Right-click Snowfall and choose Open, then click "Open" again.
+   • Or open System Settings → Privacy & Security, scroll down, and click
+     "Open Anyway" next to Snowfall.
 
 USE
-• Look for the snowflake in your menu bar.
-• "Let It Snow" turns the snow on and off.
+• A Snowfall control panel opens when you launch the app.
+• Use the big button to turn the snow on and off.
+• You can also use the snowflake in your menu bar at any time.
 • "Intensity" picks Light, Cozy, or Blizzard.
 • "Open at Login" starts the snow automatically when you log in.
 
