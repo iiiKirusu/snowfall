@@ -95,7 +95,7 @@ Sprites are drawn with Core Graphics at runtime, so there are no image files to 
 ## Credits
 
 Made by [iiiKirusu](https://github.com/iiiKirusu) — say hi on
-[Instagram](https://instagram.com/iiiKirusu).
+[Instagram](https://instagram.com/kirusuz).
 
 ## License
 
