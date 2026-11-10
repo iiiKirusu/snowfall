@@ -38,6 +38,10 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          gh release create "${GITHUB_REF_NAME}" dist/*.dmg \
-            --title "Snowfall ${GITHUB_REF_NAME#v}" \
-            --notes "Snowfall for macOS. See the README for what changed."
+          if gh release view "${GITHUB_REF_NAME}" >/dev/null 2>&1; then
+            gh release upload "${GITHUB_REF_NAME}" dist/*.dmg --clobber
+          else
+            gh release create "${GITHUB_REF_NAME}" dist/*.dmg \
+              --title "Snowfall ${GITHUB_REF_NAME#v}" \
+              --notes "Snowfall for macOS. See the README for what changed."
+          fi
