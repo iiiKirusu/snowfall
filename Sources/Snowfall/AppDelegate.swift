@@ -4,9 +4,12 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     private let snow = SnowController.shared
     private let menu = NSMenu()
     private lazy var panel = ControlPanelController()
+    private lazy var chat = ChatService()
+    private lazy var chatWindow = ChatWindowController(chat: chat)
 
     private var statusItem: NSStatusItem!
     private var toggleItem: NSMenuItem!
+    private var chatItem: NSMenuItem!
     private var loginItem: NSMenuItem!
     private var lightsItem: NSMenuItem!
     private var intensityItems: [NSMenuItem] = []
@@ -33,6 +36,24 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             name: .snowfallShowControls,
             object: nil
         )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(chatStateChanged),
+            name: .snowfallChatChanged,
+            object: nil
+        )
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(openChat),
+            name: .snowfallOpenChat,
+            object: nil
+        )
+        NSWorkspace.shared.notificationCenter.addObserver(
+            self,
+            selector: #selector(systemDidWake),
+            name: NSWorkspace.didWakeNotification,
+            object: nil
+        )
 
         let defaults = UserDefaults.standard
         if defaults.object(forKey: Settings.snowingKey) == nil {
@@ -48,7 +69,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         if Settings.isSnowing {
             snow.start()
         }
+        chat.start()
         refreshMenuState()
+        refreshChatMenu()
 
         // Always show the control window on launch so it is obvious the app
         // opened. Hiding it keeps everything running in the menu bar.
@@ -89,6 +112,10 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         let hideItem = NSMenuItem(title: "Hide Controls", action: #selector(hideControls), keyEquivalent: "")
         hideItem.target = self
         menu.addItem(hideItem)
+
+        chatItem = NSMenuItem(title: "Snowfall Chat…", action: #selector(openChat), keyEquivalent: "")
+        chatItem.target = self
+        menu.addItem(chatItem)
 
         menu.addItem(.separator())
 
@@ -155,6 +182,23 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         panel.hide()
     }
 
+    @objc private func openChat() {
+        chatWindow.show()
+    }
+
+    @objc private func chatStateChanged() {
+        refreshChatMenu()
+    }
+
+    private func refreshChatMenu() {
+        let unread = chat.unreadCount
+        chatItem.title = unread > 0 ? "Snowfall Chat (\(unread) new)" : "Snowfall Chat…"
+    }
+
+    @objc private func systemDidWake() {
+        chat.reconnectNow()
+    }
+
     @objc private func stateChanged() {
         refreshMenuState()
     }
@@ -202,7 +246,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc private func screenParametersChanged() {
-        if Settings.isSnowing {
+        if Settings.isSnowing || Settings.lightsEnabled {
             snow.rebuild()
         }
     }

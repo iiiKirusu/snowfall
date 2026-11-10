@@ -39,6 +39,12 @@ USE
 • "Intensity" picks Light, Cozy, or Blizzard.
 • "Open at Login" starts the snow automatically when you log in.
 
+CHAT
+1. Click "Chat" in the control panel (or "Snowfall Chat…" in the menu bar).
+2. Click "Create Our Invite Code" and send the SNOW-… code to your person.
+3. On their Mac, open "Snowfall Chat", paste the code, and click "Join".
+4. Messages are end-to-end encrypted. The relay only sees scrambled data.
+
 UNINSTALL
 Turn off "Open at Login", quit Snowfall from the menu, then move it to the Trash.
 

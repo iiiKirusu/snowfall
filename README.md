@@ -11,8 +11,9 @@ The snow lives in a click-through window **above your wallpaper and behind your 
 - Menu-bar snowflake toggles the snow on and off (with a gentle fade)
 - Intensity: **Light**, **Cozy**, or **Blizzard**
 - Optional **Christmas Lights**: a warm, twinkling fairy-light garland around the desktop, tucked below the menu bar and above the Dock
+- A private **two-person chat** with end-to-end encryption — pair two Macs with an invite code
 - Optional **Open at Login**
-- No Dock icon, no window, no permissions, no network access
+- No Dock icon, no permissions required
 - Self-contained Swift app — no third-party dependencies
 
 ## Build it
@@ -51,6 +52,7 @@ Look for the snowflake in the menu bar:
 
 - **Snowfall Controls…** — reopen the control panel
 - **Hide Controls** — tuck the panel away
+- **Snowfall Chat…** — open the chat window (shows “new” when there are unread messages)
 - **Let It Snow** — turn the snow on or off
 - **Intensity** — Light / Cozy / Blizzard
 - **Christmas Lights** — turn the glowing garland on or off
@@ -58,6 +60,25 @@ Look for the snowflake in the menu bar:
 - **Quit Snowfall** — stop the app completely
 
 Settings are remembered between launches.
+
+## Chat with your person
+
+Snowfall has a little chat just for the two of you. It works between two Macs anywhere in the world — no accounts, no server to run, and no messages stored in the cloud.
+
+### Pair your Macs
+
+1. On your Mac, open **Snowfall Chat** and click **Create Our Invite Code**.
+2. A code like `SNOW-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX-XXXX` appears. Click **Copy Code** and send it to her (iMessage, AirDrop, whatever).
+3. On her Mac, open **Snowfall Chat**, paste the code into **Have a code from her?**, and click **Join**.
+4. You’re connected. Say hi ❄️
+
+The code is effectively your shared password. Anyone who has it can join the conversation, so keep it between the two of you. You can copy it again from the **⋯** menu → **Copy Invite Code**, or **Unpair** if you ever need to start over.
+
+### Privacy
+
+Messages are encrypted on your Mac with an AES-GCM key derived from the invite code, then relayed through the public [ntfy.sh](https://ntfy.sh) service. The relay only ever sees scrambled data — it cannot read your messages. Snowfall keeps a local copy of the last 300 messages on each Mac, and nothing else.
+
+The chat reconnects automatically after sleep or a network drop, and the menu shows an unread count when new messages arrive.
 
 ## Uninstall
 
@@ -69,6 +90,8 @@ Turn off **Open at Login**, choose **Quit Snowfall**, then drag the app to the T
 - `Sources/Snowfall/SnowView.swift` — two `CAEmitterLayer`s of snow particles, scaled per display
 - `Sources/Snowfall/LightsView.swift` — a sagging wire of warm, twinkling fairy lights around the desktop
 - `Sources/Snowfall/SnowTextures.swift` — snowflake and soft-dot sprites drawn at runtime with Core Graphics
+- `Sources/Snowfall/ChatService.swift` — encrypted chat transport and invite-code pairing over ntfy.sh
+- `Sources/Snowfall/ChatView.swift` — the AppKit chat interface (onboarding, invite card, message bubbles)
 - `Sources/Snowfall/AppDelegate.swift` — menu-bar item, settings, login item
 - `Scripts/generate-icon.swift` — draws the app icon at every size, then `iconutil` converts it to `.icns`
 
