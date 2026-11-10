@@ -70,6 +70,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             snow.start()
         }
         chat.start()
+        chatWindow.onBack = { [weak self] in
+            self?.panel.show()
+        }
         refreshMenuState()
         refreshChatMenu()
 

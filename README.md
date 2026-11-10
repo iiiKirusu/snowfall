@@ -78,7 +78,7 @@ The code is effectively your shared password. Anyone who has it can join the con
 
 Messages are encrypted on your Mac with an AES-GCM key derived from the invite code, then relayed through the public [ntfy.sh](https://ntfy.sh) service. The relay only ever sees scrambled data — it cannot read your messages. Snowfall keeps a local copy of the last 300 messages on each Mac, and nothing else.
 
-The chat reconnects automatically after sleep or a network drop, and the menu shows an unread count when new messages arrive.
+The chat reconnects automatically after sleep or a network drop, and the menu shows an unread count when new messages arrive. Use the **‹** button in the chat header to go back to the Snowfall controls.
 
 ## Uninstall
 

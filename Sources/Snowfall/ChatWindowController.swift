@@ -5,6 +5,9 @@ final class ChatWindowController: NSObject, NSWindowDelegate {
     private let window: NSWindow
     private let chatViewController: ChatViewController
 
+    /// Called when the user goes back to the Snowfall control panel.
+    var onBack: (() -> Void)?
+
     init(chat: ChatService) {
         self.chat = chat
         chatViewController = ChatViewController(chat: chat)
@@ -17,6 +20,10 @@ final class ChatWindowController: NSObject, NSWindowDelegate {
         )
 
         super.init()
+
+        chatViewController.onBack = { [weak self] in
+            self?.backToControls()
+        }
 
         window.title = "Snowfall Chat"
         window.titlebarAppearsTransparent = true
@@ -43,5 +50,11 @@ final class ChatWindowController: NSObject, NSWindowDelegate {
 
     func windowWillClose(_ notification: Notification) {
         chat.setChatVisible(false)
+    }
+
+    private func backToControls() {
+        chat.setChatVisible(false)
+        window.orderOut(nil)
+        onBack?()
     }
 }

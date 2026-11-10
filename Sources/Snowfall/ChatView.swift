@@ -23,6 +23,7 @@ final class ChatViewController: NSViewController, NSTextFieldDelegate {
 
     // Header
     private let headerView = NSView()
+    private let backButton = NSButton()
     private let iconView = NSImageView()
     private let titleLabel = NSTextField(labelWithString: "Snowfall Chat")
     private let statusDot = NSView()
@@ -52,6 +53,9 @@ final class ChatViewController: NSViewController, NSTextFieldDelegate {
 
     private var lastSignature = ""
     private var lastWidth: CGFloat = 0
+
+    /// Called when the back button is pressed.
+    var onBack: (() -> Void)?
 
     private static let timeFormatter: DateFormatter = {
         let formatter = DateFormatter()
@@ -118,6 +122,16 @@ final class ChatViewController: NSViewController, NSTextFieldDelegate {
     private func buildHeader() {
         headerView.translatesAutoresizingMaskIntoConstraints = false
 
+        backButton.image = NSImage(systemSymbolName: "chevron.left", accessibilityDescription: "Back to Snowfall Controls")
+        backButton.isBordered = false
+        backButton.bezelStyle = .regularSquare
+        backButton.imagePosition = .imageOnly
+        backButton.contentTintColor = NSColor.white.withAlphaComponent(0.7)
+        backButton.toolTip = "Back to Snowfall Controls"
+        backButton.target = self
+        backButton.action = #selector(goBack)
+        backButton.translatesAutoresizingMaskIntoConstraints = false
+
         iconView.image = NSImage(systemSymbolName: "snowflake", accessibilityDescription: nil)
         iconView.contentTintColor = Colors.snowflake
         iconView.imageScaling = .scaleProportionallyUpOrDown
@@ -147,6 +161,7 @@ final class ChatViewController: NSViewController, NSTextFieldDelegate {
         headerSeparator.boxType = .separator
         headerSeparator.translatesAutoresizingMaskIntoConstraints = false
 
+        headerView.addSubview(backButton)
         headerView.addSubview(iconView)
         headerView.addSubview(titleLabel)
         headerView.addSubview(statusDot)
@@ -154,7 +169,12 @@ final class ChatViewController: NSViewController, NSTextFieldDelegate {
         headerView.addSubview(menuButton)
 
         NSLayoutConstraint.activate([
-            iconView.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 18),
+            backButton.leadingAnchor.constraint(equalTo: headerView.leadingAnchor, constant: 12),
+            backButton.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
+            backButton.widthAnchor.constraint(equalToConstant: 24),
+            backButton.heightAnchor.constraint(equalToConstant: 24),
+
+            iconView.leadingAnchor.constraint(equalTo: backButton.trailingAnchor, constant: 8),
             iconView.centerYAnchor.constraint(equalTo: headerView.centerYAnchor),
             iconView.widthAnchor.constraint(equalToConstant: 20),
             iconView.heightAnchor.constraint(equalToConstant: 20),
@@ -694,6 +714,10 @@ final class ChatViewController: NSViewController, NSTextFieldDelegate {
     }
 
     // MARK: - Actions
+
+    @objc private func goBack() {
+        onBack?()
+    }
 
     @objc private func createInvite() {
         let trimmed = nameField.stringValue.trimmingCharacters(in: .whitespacesAndNewlines)
